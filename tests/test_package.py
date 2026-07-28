@@ -2,8 +2,8 @@ import pathlib
 import re
 import unittest
 
-import broadcast
-from broadcast import (
+import broadcast_python
+from broadcast_python import (
     APIError,
     AuthenticationError,
     AuthorizationError,
@@ -14,7 +14,7 @@ from broadcast import (
     TimeoutError,
     ValidationError,
 )
-from broadcast.version import VERSION
+from broadcast_python.version import VERSION
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -27,7 +27,7 @@ class TestPackaging(unittest.TestCase):
         match = re.search(r'^version\s*=\s*"([^"]+)"', text, re.MULTILINE)
         self.assertIsNotNone(match)
         self.assertEqual(VERSION, match.group(1))
-        self.assertEqual(broadcast.__version__, VERSION)
+        self.assertEqual(broadcast_python.__version__, VERSION)
 
     def test_declares_no_runtime_dependencies(self):
         # The client is built on urllib so it cannot conflict with a pinned
@@ -36,12 +36,12 @@ class TestPackaging(unittest.TestCase):
         self.assertRegex(text, r"dependencies\s*=\s*\[\s*\]")
 
     def test_ships_a_py_typed_marker(self):
-        self.assertTrue((ROOT / "src" / "broadcast" / "py.typed").exists())
+        self.assertTrue((ROOT / "src" / "broadcast_python" / "py.typed").exists())
 
 
 class TestPublicSurface(unittest.TestCase):
     def test_exports_the_client(self):
-        self.assertTrue(callable(broadcast.Broadcast))
+        self.assertTrue(callable(broadcast_python.Broadcast))
 
     def test_error_hierarchy_nests_as_the_ruby_gem_does(self):
         self.assertTrue(issubclass(AuthenticationError, APIError))
@@ -62,7 +62,7 @@ class TestPublicSurface(unittest.TestCase):
         self.assertIsNot(TimeoutError, builtins.TimeoutError)
 
     def test_every_resource_is_reachable(self):
-        client = broadcast.Broadcast(api_token="t", host="https://mail.example.com")
+        client = broadcast_python.Broadcast(api_token="t", host="https://mail.example.com")
         for name in (
             "subscribers", "sequences", "broadcasts", "segments", "templates",
             "webhook_endpoints", "transactionals", "opt_in_forms", "email_servers",
@@ -71,17 +71,17 @@ class TestPublicSurface(unittest.TestCase):
             self.assertTrue(hasattr(client, name), "missing resource: {}".format(name))
 
     def test_migration_exposes_all_eighteen_collections(self):
-        client = broadcast.Broadcast(api_token="t", host="https://mail.example.com")
-        for collection in broadcast.COLLECTIONS:
+        client = broadcast_python.Broadcast(api_token="t", host="https://mail.example.com")
+        for collection in broadcast_python.COLLECTIONS:
             self.assertTrue(
                 callable(getattr(client.migration, collection, None)),
                 "missing collection: {}".format(collection),
             )
-        self.assertEqual(len(broadcast.COLLECTIONS), 18)
+        self.assertEqual(len(broadcast_python.COLLECTIONS), 18)
 
     def test_all_exports_resolve(self):
-        for name in broadcast.__all__:
-            self.assertTrue(hasattr(broadcast, name), "__all__ names a missing export: {}".format(name))
+        for name in broadcast_python.__all__:
+            self.assertTrue(hasattr(broadcast_python, name), "__all__ names a missing export: {}".format(name))
 
 
 if __name__ == "__main__":

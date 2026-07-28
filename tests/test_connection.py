@@ -3,7 +3,7 @@ import unittest
 from urllib.error import URLError
 from urllib.parse import parse_qs, urlparse
 
-from broadcast.errors import (
+from broadcast_python.errors import (
     APIError,
     AuthenticationError,
     AuthorizationError,

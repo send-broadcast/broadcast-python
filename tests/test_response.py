@@ -1,6 +1,6 @@
 import unittest
 
-from broadcast.response import Response, Warning_, RateLimit, build_response
+from broadcast_python.response import Response, Warning_, RateLimit, build_response
 
 
 class TestResponse(unittest.TestCase):

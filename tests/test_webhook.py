@@ -4,8 +4,8 @@ import hmac
 import json
 import unittest
 
-from broadcast import webhook
-from broadcast.webhook import (
+from broadcast_python import webhook
+from broadcast_python.webhook import (
     BROADCAST_EVENTS,
     EMAIL_EVENTS,
     EVENT_TYPES,

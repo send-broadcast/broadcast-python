@@ -2,8 +2,8 @@ import os
 import unittest
 from contextlib import contextmanager
 
-from broadcast.configuration import Configuration, ENV_HOST, ENV_TOKEN
-from broadcast.errors import ConfigurationError
+from broadcast_python.configuration import Configuration, ENV_HOST, ENV_TOKEN
+from broadcast_python.errors import ConfigurationError
 
 
 @contextmanager

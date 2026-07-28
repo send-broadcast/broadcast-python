@@ -1,6 +1,6 @@
 """Python client for the Broadcast email platform.
 
-    from broadcast import Broadcast
+    from broadcast_python import Broadcast
 
     client = Broadcast(api_token="...", host="https://mail.example.com")
     client.subscribers.create(email="ada@example.com")

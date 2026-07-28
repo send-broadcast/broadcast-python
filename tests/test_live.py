@@ -16,7 +16,7 @@ Read-only by design: it must be safe to point at production.
 import os
 import unittest
 
-from broadcast import AuthenticationError, Broadcast
+from broadcast_python import AuthenticationError, Broadcast
 
 LIVE = os.environ.get("BROADCAST_LIVE_TEST") == "1"
 

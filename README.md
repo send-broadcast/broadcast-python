@@ -19,7 +19,7 @@ standard library's `urllib`, so it cannot conflict with a pinned `requests` or
 ## Quick start
 
 ```python
-from broadcast import Broadcast
+from broadcast_python import Broadcast
 
 client = Broadcast(
     api_token="...",                  # or BROADCAST_API_TOKEN
@@ -119,7 +119,7 @@ BroadcastError
 ```
 
 `ValidationError` and `TimeoutError` are siblings of `APIError`, not children —
-matching the Ruby gem. Note `broadcast.TimeoutError` is **not** the builtin
+matching the Ruby gem. Note `broadcast_python.TimeoutError` is **not** the builtin
 `TimeoutError`.
 
 Timeouts, 429s, and 5xx are retried with backoff. A 422 is not: it is
@@ -280,7 +280,7 @@ explicitly.
 ## Webhooks
 
 ```python
-from broadcast import webhook
+from broadcast_python import webhook
 
 valid = webhook.verify(
     raw_body,                        # the raw bytes, not a re-serialised dict
@@ -299,7 +299,7 @@ every rejection rather than distinguishing them.
 Pass the **raw** request body. Re-serialising a parsed dict changes the bytes
 and verification will fail.
 
-`broadcast.EVENT_TYPES` lists all 32 event names.
+`broadcast_python.EVENT_TYPES` lists all 32 event names.
 
 ---
 

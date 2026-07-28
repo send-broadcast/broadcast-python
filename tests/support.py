@@ -92,7 +92,7 @@ class SleepSpy:
 
 def make_client(stubs=None, **overrides):
     """A Broadcast client wired to a StubOpener."""
-    from broadcast.client import Broadcast
+    from broadcast_python.client import Broadcast
 
     opener = StubOpener(stubs if stubs is not None else {"body": {}})
     sleep = SleepSpy()
