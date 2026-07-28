@@ -8,14 +8,6 @@ Works with any Broadcast instance — self-hosted or SaaS. Covers **104/104 API 
 
 Also available: [Ruby](https://github.com/send-broadcast/broadcast-ruby) · [PHP](https://github.com/send-broadcast/broadcast-php) · [Node/TypeScript](https://github.com/send-broadcast/broadcast-node)
 
-> **Not yet on PyPI.** The package is complete and tested but unpublished, so
-> `pip install broadcast-python` will not resolve. Install from the repository
-> until it lands:
->
-> ```bash
-> pip install git+https://github.com/send-broadcast/broadcast-python
-> ```
-
 ## Installation
 
 ```bash

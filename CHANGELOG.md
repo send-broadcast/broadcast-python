@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.0] - 2026-07-27
+## [0.1.0] - 2026-07-28
+
+Published to PyPI as `broadcast-python`; the import module is `broadcast_python`,
+because a package named `broadcast` already occupies that name on PyPI.
+
+Released through PyPI trusted publishing (OIDC) rather than an API token — no
+credential for this package exists anywhere. Verified from the registry: the
+installed artifact imports, ships `py.typed`, exposes all 18 migration
+collections and 32 event types, and computes a webhook signature identical to
+the Ruby, PHP and Node SDKs.
+
 
 First release. Feature parity with `broadcast-ruby` v0.3.0 — the reference
 implementation — verified at **104/104 API operations** by the coverage report
