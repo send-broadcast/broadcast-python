@@ -1,10 +1,22 @@
 # broadcast-python
 
-Python client for [Broadcast](https://sendbroadcast.net), the email marketing
-platform. Works with any Broadcast instance — self-hosted or SaaS.
+Official Python client for [Broadcast](https://sendbroadcast.net), the self-hosted email marketing platform.
 
-Covers **104/104 API operations**, verified against the API's generated OpenAPI
-document.
+Works with any Broadcast instance — self-hosted or SaaS. Covers **104/104 API operations**, verified against the API's generated OpenAPI document.
+
+📖 **[Python SDK documentation](https://sendbroadcast.net/docs/python-sdk)** · [API reference](https://sendbroadcast.net/docs/api-authentication) · [All docs](https://sendbroadcast.net/docs)
+
+Also available: [Ruby](https://github.com/send-broadcast/broadcast-ruby) · [PHP](https://github.com/send-broadcast/broadcast-php) · [Node/TypeScript](https://github.com/send-broadcast/broadcast-node)
+
+> **Not yet on PyPI.** The package is complete and tested but unpublished, so
+> `pip install broadcast-python` will not resolve. Install from the repository
+> until it lands:
+>
+> ```bash
+> pip install git+https://github.com/send-broadcast/broadcast-python
+> ```
+
+## Installation
 
 ```bash
 pip install broadcast-python
@@ -14,9 +26,19 @@ Python 3.9+. **No runtime dependencies** — the transport is built on the
 standard library's `urllib`, so it cannot conflict with a pinned `requests` or
 `httpx` elsewhere in your environment.
 
----
+The distribution is `broadcast-python`; the module is `broadcast_python`. A
+package named `broadcast` already exists on PyPI, so the module deliberately
+does not claim that name.
 
-## Quick start
+## Getting Your API Token
+
+1. Log in to your Broadcast dashboard
+2. Go to **Settings > API Keys**
+3. Click **New API Key**
+4. Name it, select the permissions you need (see [Permissions](#api-token-permissions) below), and save
+5. Copy the token
+
+## Quick Start
 
 ```python
 from broadcast_python import Broadcast
@@ -101,6 +123,31 @@ part of it. A mistyped filter silently widens a result set unless you look.
 
 ---
 
+## Rate Limits
+
+Every response carries the current limit state, and 429s are retried
+automatically, honouring the server's `Retry-After` (capped at `max_retry_delay`).
+
+```python
+result = client.subscribers.list()
+
+result.rate_limit.limit      # 120
+result.rate_limit.remaining  # 118
+result.rate_limit.reset      # datetime
+
+if result.rate_limit and result.rate_limit.remaining < 10:
+    time.sleep(1)
+```
+
+`rate_limit` is `None` when the server sends no limit headers, or when the limit
+header cannot be parsed — a value we cannot read makes the whole block
+untrustworthy.
+
+If the retries are exhausted you get a `RateLimitError`, which carries
+`.retry_after` so you can requeue the job sensibly.
+
+---
+
 ## Errors
 
 ```
@@ -127,7 +174,7 @@ deterministic, so retrying is pure latency.
 
 ---
 
-## Resources
+## Common Tasks
 
 ### Subscribers
 
@@ -263,7 +310,7 @@ It surfaces as `AuthorizationError`.
 
 ---
 
-## Channel scoping
+## Channel Scoping
 
 ```python
 with client.with_channel(123):
@@ -303,16 +350,112 @@ and verification will fail.
 
 ---
 
+## API Token Permissions
+
+Each token can be scoped to specific resources. Use the minimum permissions your
+integration requires.
+
+| Resource | Read permission | Write permission |
+|----------|----------------|------------------|
+| Transactional Emails | `transactionals_read` -- get delivery status | `transactionals_write` -- send emails |
+| Subscribers | `subscribers_read` -- list, find | `subscribers_write` -- create, update, tag, deactivate, unsubscribe, redact |
+| Sequences | `sequences_read` -- list, get, list steps | `sequences_write` -- create, update, delete, manage steps, enroll subscribers |
+| Broadcasts | `broadcasts_read` -- list, get, statistics | `broadcasts_write` -- create, update, delete, send, schedule |
+| Segments | `segments_read` -- list, get | `segments_write` -- create, update, delete |
+| Templates | `templates_read` -- list, get | `templates_write` -- create, update, delete |
+| Opt-In Forms | `opt_in_forms_read` -- list, get, analytics | `opt_in_forms_write` -- create, update, delete, create_variant, duplicate |
+| Email Servers | `email_servers_read` -- list, get | `email_servers_write` -- create, update, delete, test_connection, copy_to_channel (admin) |
+| Webhook Endpoints | `webhook_endpoints_read` -- list, get, deliveries | `webhook_endpoints_write` -- create, update, delete, test |
+| Autopilot | `autopilot_read` -- list, get, runs | `autopilot_write` -- create, update, delete, activate, pause, deactivate, trigger_run |
+
+---
+
+## Troubleshooting
+
+### `AuthenticationError` (401)
+
+- **Check the token:** it must be an API key from **Settings > API Keys**, not a
+  password or a session cookie.
+- **Check the host:** pointing at the wrong instance produces a valid-looking
+  401, because the token is unknown there.
+
+### `AuthorizationError` (403)
+
+The token is valid but lacks the permission for that call. Check the table
+above, then re-issue the key with the resource enabled — permissions are fixed
+at creation.
+
+On a demo instance, the entire migration API returns 403 for every request,
+valid token or not.
+
+### `ValidationError` (422) on a repeated send
+
+If you reused an `idempotency_key` with a *different* payload, the API rejects
+it: the key is fingerprinted over method, path and body. It means "this key was
+already used for something else", not that the email was invalid. Use a new key.
+
+### Emails accepted but never delivered
+
+Call `client.status()`. If `readiness["transactionals"]` is false, the channel
+has no usable email server or sender identity — the API accepts the request and
+the send stalls. On a demo instance, sends are always accepted and never
+delivered.
+
+### `APIError` mentioning a redirect
+
+Your `host` is wrong — usually `http` instead of `https`, or a bare apex that
+redirects to `www`. The client refuses to follow redirects on writes, and never
+across hosts, because every request carries your API token. Set `host` to the
+final URL.
+
+### `TimeoutError` is not the builtin
+
+`broadcast_python.TimeoutError` mirrors the Ruby gem's error hierarchy and is a
+distinct class from Python's builtin. `except TimeoutError` in a module that
+imported ours will not catch a socket timeout, and vice versa.
+
+---
+
 ## Development
 
 ```bash
 python -m unittest discover -s tests    # mocked HTTP, no network
 
+pip install ruff mypy
+ruff check .
+mypy
+
 BROADCAST_LIVE_TEST=1 BROADCAST_HOST=http://localhost:3000 \
 BROADCAST_API_TOKEN=... python -m unittest tests.test_live
 ```
 
-The suite uses only the standard library — no pytest required.
+The suite uses only the standard library — no pytest required, and no install
+step: `PYTHONPATH=src:tests` is the whole setup.
+
+CI runs the suite on Python 3.9 through 3.14, lints with ruff, type-checks with
+mypy, and separately builds the wheel and installs it into a clean virtualenv to
+prove the packaged artifact imports and works.
+
+---
+
+## Documentation
+
+- **[Python SDK guide](https://sendbroadcast.net/docs/python-sdk)** — the same material as this README, on the docs site
+- **[API reference](https://sendbroadcast.net/docs/api-authentication)** — endpoints, parameters, and permissions
+- **[API response warnings](https://sendbroadcast.net/docs/api-response-warnings)** — why a 2xx can still tell you something went wrong
+- **[Webhook endpoints](https://sendbroadcast.net/docs/api-webhook-endpoints)** — signature format and event types
+- **[Agents CLI](https://sendbroadcast.net/docs/agents-cli)** — the same credentials, from a terminal
+
+### Other SDKs
+
+| Language | Package | Repository |
+|---|---|---|
+| Python | broadcast-python | this repository |
+| Ruby | [broadcast-ruby](https://rubygems.org/gems/broadcast-ruby) | [broadcast-ruby](https://github.com/send-broadcast/broadcast-ruby) |
+| PHP | [broadcast/broadcast-php](https://packagist.org/packages/broadcast/broadcast-php) | [broadcast-php](https://github.com/send-broadcast/broadcast-php) |
+| Node / TypeScript | [@send-broadcast/sdk](https://www.npmjs.com/package/@send-broadcast/sdk) | [broadcast-node](https://github.com/send-broadcast/broadcast-node) |
+
+All four cover the same 104 operations and behave the same way on the wire — the transport contract (warnings, idempotency, rate-limit handling, redirect safety, credential redaction) is identical across languages.
 
 ---
 
