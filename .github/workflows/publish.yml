@@ -1,0 +1,120 @@
+name: Publish
+
+# Publishes to PyPI on a version tag, using Trusted Publishing (OIDC).
+#
+# There is no API token anywhere in this repository or in GitHub secrets. PyPI
+# verifies a short-lived OIDC identity issued by GitHub Actions for this exact
+# repository, workflow file and environment, then mints a token valid for one
+# upload. A leaked long-lived token is the failure mode this removes entirely.
+#
+# The trusted publisher must be registered at
+# https://pypi.org/manage/account/publishing/ with values matching this file:
+#   owner: send-broadcast, repository: broadcast-python,
+#   workflow: publish.yml, environment: pypi
+# Renaming this file or the environment breaks publishing until PyPI is updated.
+
+on:
+  push:
+    tags: ['v*']
+  # Manual runs go to TestPyPI only — see the input default below. A manual
+  # dispatch cannot publish to real PyPI, so a mistaken click is recoverable.
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Target repository'
+        required: true
+        default: 'testpypi'
+        type: choice
+        options: [testpypi]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build distributions
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build sdist and wheel
+        run: |
+          pip install build
+          python -m build
+
+      - name: Check metadata renders on PyPI
+        run: |
+          pip install twine
+          twine check dist/*
+
+      - name: Refuse to publish a tag that disagrees with the package version
+        # A tag saying v0.2.0 on a package declaring 0.1.0 would publish the
+        # wrong version under the right name, and PyPI never lets a version be
+        # replaced. Cheaper to fail here.
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(python -c "import re;print(re.search(r'^version = \"(.+)\"', open('pyproject.toml').read(), re.M).group(1))")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::tag $GITHUB_REF_NAME implies version $TAG_VERSION but pyproject.toml declares $PKG_VERSION"
+            exit 1
+          fi
+          echo "tag and pyproject agree on $PKG_VERSION"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  pypi:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    name: Publish to PyPI
+
+    # The environment is half of what PyPI checks. Adding required reviewers to
+    # it in the repository settings makes every release an explicit approval.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/broadcast-python
+
+    permissions:
+      # Mints the OIDC token PyPI verifies. Without it the upload is rejected;
+      # with it, no secret is needed.
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  testpypi:
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    name: Publish to TestPyPI
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/broadcast-python
+
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
