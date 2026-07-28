@@ -2,7 +2,7 @@ import os
 import unittest
 from contextlib import contextmanager
 
-from broadcast_python.configuration import Configuration, ENV_HOST, ENV_TOKEN
+from broadcast_python.configuration import ENV_HOST, ENV_TOKEN, Configuration
 from broadcast_python.errors import ConfigurationError
 
 

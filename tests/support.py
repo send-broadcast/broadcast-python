@@ -2,7 +2,7 @@
 
 import io
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from urllib.error import HTTPError
 
 
@@ -45,7 +45,7 @@ class StubOpener:
         self.queue: List[Dict[str, Any]] = list(stubs) if isinstance(stubs, list) else [stubs]
         self.calls: List[RecordedCall] = []
 
-    def open(self, request, timeout=None):  # noqa: A002 - urllib's signature
+    def open(self, request, timeout=None):
         body = request.data.decode("utf-8") if request.data else None
         self.calls.append(
             RecordedCall(
@@ -97,13 +97,13 @@ def make_client(stubs=None, **overrides):
     opener = StubOpener(stubs if stubs is not None else {"body": {}})
     sleep = SleepSpy()
 
-    settings = dict(
-        api_token="test-token",
-        host="https://mail.example.com",
-        retry_delay=0,
-        opener=opener,
-        sleep=sleep,
-    )
+    settings = {
+        "api_token": "test-token",
+        "host": "https://mail.example.com",
+        "retry_delay": 0,
+        "opener": opener,
+        "sleep": sleep,
+    }
     settings.update(overrides)
 
     client = Broadcast(**settings)

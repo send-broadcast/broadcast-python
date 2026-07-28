@@ -14,7 +14,12 @@ class BaseResource:
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None, raw: bool = False) -> Any:
         return self._client.request("GET", path, params or {}, raw=raw)
 
-    def _post(self, path: str, body: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, Any]] = None) -> Any:
+    def _post(
+        self,
+        path: str,
+        body: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, Any]] = None,
+    ) -> Any:
         return self._client.request("POST", path, body or {}, headers=headers)
 
     def _patch(self, path: str, body: Optional[Dict[str, Any]] = None) -> Any:

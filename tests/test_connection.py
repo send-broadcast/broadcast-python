@@ -14,7 +14,6 @@ from broadcast_python.errors import (
     ValidationError,
     WarningError,
 )
-
 from support import make_client
 
 

@@ -71,8 +71,7 @@ class Migration(BaseResource):
         while True:
             page = getattr(self, collection)(limit=limit, offset=offset, **params)
             records = page.get("data") or []
-            for record in records:
-                yield record
+            yield from records
 
             pagination = page.get("pagination") or {}
             if not pagination.get("has_more"):

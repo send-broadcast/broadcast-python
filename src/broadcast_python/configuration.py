@@ -26,18 +26,18 @@ class Configuration:
 
     __slots__ = (
         "api_token",
+        "broadcast_channel_id",
+        "debug",
         "host",
-        "timeout",
+        "logger",
+        "max_retry_delay",
         "open_timeout",
+        "opener",
         "retry_attempts",
         "retry_delay",
-        "max_retry_delay",
-        "warnings_mode",
-        "logger",
-        "debug",
-        "broadcast_channel_id",
-        "opener",
         "sleep",
+        "timeout",
+        "warnings_mode",
     )
 
     def __init__(

@@ -58,7 +58,7 @@ class RateLimit(NamedTuple):
 class Response(dict):
     """A parsed JSON object body plus its transport metadata."""
 
-    __slots__ = ("status", "headers", "_warnings", "_rate_limit")
+    __slots__ = ("_rate_limit", "_warnings", "headers", "status")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -92,12 +92,15 @@ class Response(dict):
     @property
     def rate_limit(self) -> Optional[RateLimit]:
         if self._rate_limit is _UNSET:
-            limit = self.headers.get("x-ratelimit-limit")
+            # A present-but-unparseable limit means the whole block is
+            # untrustworthy, so report no rate limit rather than a RateLimit
+            # whose `limit` is None despite being typed int.
+            limit = _int_or_none(self.headers.get("x-ratelimit-limit"))
             if limit is None:
                 self._rate_limit = None
             else:
                 self._rate_limit = RateLimit(
-                    limit=_int_or_none(limit),
+                    limit=limit,
                     remaining=_int_or_none(self.headers.get("x-ratelimit-remaining")),
                     reset=_parse_time(self.headers.get("x-ratelimit-reset")),
                 )

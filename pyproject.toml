@@ -40,3 +40,51 @@ packages = ["src/broadcast_python"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src/broadcast_python", "README.md", "CHANGELOG.md", "LICENSE"]
+
+[dependency-groups]
+# Dev tooling only. The package itself still has zero runtime dependencies.
+dev = ["ruff>=0.6", "mypy>=1.11"]
+
+[tool.ruff]
+# The floor the package claims. Ruff will flag syntax newer than this.
+target-version = "py39"
+line-length = 110
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W",   # pycodestyle
+  "F",        # pyflakes
+  "I",        # import sorting
+  "UP",       # pyupgrade — but see the ignore below
+  "B",        # bugbear
+  "C4",       # comprehensions
+  "SIM",      # simplify
+  "RUF",      # ruff-specific
+  "A",        # flake8-builtins — `id` shadows a builtin all over the API surface
+]
+ignore = [
+  # pyupgrade wants f-strings and modern typing syntax throughout. The package
+  # supports 3.9, where `X | Y` annotations and some rewrites are unavailable,
+  # and .format() reads no worse. Revisit when the floor moves to 3.10+.
+  "UP006", "UP007", "UP032", "UP035", "UP045",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests construct deliberately-invalid input and use long descriptive names.
+# RUF012: unittest case tables are class attributes by convention, not state.
+"tests/*" = ["E501", "RUF012", "A004"]
+# A004: the client deliberately defines its own TimeoutError to mirror the Ruby
+# gem's error hierarchy. It is documented in the README and pinned by a test
+# asserting it is NOT the builtin.
+"src/broadcast_python/__init__.py" = ["A004"]
+"src/broadcast_python/connection.py" = ["A004"]
+
+[tool.mypy]
+files = ["src"]
+strict = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unreachable = true
+no_implicit_optional = true
+disallow_untyped_defs = false

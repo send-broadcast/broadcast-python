@@ -8,6 +8,7 @@ dependencies and cannot conflict with a pinned ``requests`` or ``httpx``
 elsewhere in the environment.
 """
 
+import contextlib
 import json
 import socket
 import time
@@ -104,15 +105,23 @@ class Connection:
             status = error.code
             headers = dict(error.headers.items()) if error.headers else {}
             if status in REDIRECT_CODES:
-                return self._follow_redirect(headers, status, method, url, extra_headers, raw, redirects)
+                return self._follow_redirect(
+                    headers, status, method, url, extra_headers, raw, redirects
+                )
             self._raise_for_status(status, _safe_read(error), headers)
             raise  # unreachable; _raise_for_status always raises
         except URLError as error:
-            raise _transport_error(error)
+            raise _transport_error(error) from error
         except socket.timeout as error:
-            raise TimeoutError("Request timeout: {}".format(error))
+            raise TimeoutError("Request timeout: {}".format(error)) from error
 
-        status = getattr(response, "status", None) or getattr(response, "code", 200)
+        # urllib exposes the code as `.status` on 3.9+ and `.code` on older
+        # objects. Both are Any to the type checker, so the fallback is spelled
+        # out rather than chained through `or`, which loses the int.
+        raw_status = getattr(response, "status", None)
+        if raw_status is None:
+            raw_status = getattr(response, "code", None)
+        status = int(raw_status) if raw_status is not None else 200
         headers = _headers_of(response)
         payload_bytes = response.read()
         self._debug_response(status)
@@ -136,7 +145,9 @@ class Connection:
         if method != "GET":
             raise APIError(
                 "Host redirected {} {} to {}. Set `host` to the final URL — "
-                "writes are not followed automatically.".format(method, url, location or "(no Location header)")
+                "writes are not followed automatically.".format(
+                    method, url, location or "(no Location header)"
+                )
             )
         if location is None:
             raise APIError("Redirect from {} had no Location header".format(url))
@@ -203,7 +214,7 @@ class Connection:
             attempts += 1
             try:
                 return operation()
-            except Exception as error:  # noqa: BLE001 - re-raised unless retryable
+            except Exception as error:
                 if attempts >= self.config.retry_attempts or not _retryable(error):
                     raise
                 self._sleep(self._delay_for(error, attempts))
@@ -350,13 +361,11 @@ def _safe_read(error: HTTPError) -> bytes:
     """
     try:
         return error.read()
-    except Exception:  # noqa: BLE001 - a body we cannot read is just no message
+    except Exception:
         return b""
     finally:
-        try:
+        with contextlib.suppress(Exception):
             error.close()
-        except Exception:  # noqa: BLE001
-            pass
 
 
 def _transport_error(error: URLError) -> Exception:
@@ -372,6 +381,4 @@ def _retryable(error: Exception) -> bool:
     if isinstance(error, (TimeoutError, RateLimitError)):
         return True
     # Only 5xx. A 422 is deterministic — retrying it is pure latency.
-    if isinstance(error, APIError) and "Server error" in str(error):
-        return True
-    return False
+    return isinstance(error, APIError) and "Server error" in str(error)

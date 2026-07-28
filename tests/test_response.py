@@ -1,6 +1,6 @@
 import unittest
 
-from broadcast_python.response import Response, Warning_, RateLimit, build_response
+from broadcast_python.response import RateLimit, Response, Warning_, build_response
 
 
 class TestResponse(unittest.TestCase):
@@ -79,6 +79,14 @@ class TestResponse(unittest.TestCase):
         result = build_response({}, 200, {"x-ratelimit-limit": "120", "x-ratelimit-reset": "not-a-time"})
         self.assertIsNone(result.rate_limit.reset)
         self.assertEqual(result.rate_limit.limit, 120)
+
+    def test_unparseable_limit_yields_no_rate_limit_at_all(self):
+        # RateLimit.limit is typed int. A present-but-garbage header used to
+        # produce limit=None, contradicting the annotation and handing callers
+        # a None where they were told to expect a number. If the limit cannot
+        # be read, the whole block is untrustworthy.
+        result = build_response({}, 200, {"x-ratelimit-limit": "not-a-number", "x-ratelimit-remaining": "5"})
+        self.assertIsNone(result.rate_limit)
 
     def test_header_lookup_is_case_insensitive(self):
         result = build_response({}, 200, {"X-RateLimit-Limit": "5"})
