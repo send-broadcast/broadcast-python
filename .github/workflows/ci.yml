@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # The package has no runtime dependencies, so nothing can break from a
+  # release upstream — but the dev tooling can, and a weekly run re-proves the
+  # floor against current patch releases of each interpreter.
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # pyproject.toml claims requires-python = ">=3.9". Before this workflow the
+  # suite had only ever run on 3.14 — every older interpreter in that range was
+  # advertised and untested. The `datetime.fromisoformat` shim in response.py
+  # exists specifically because 3.9 and 3.10 cannot parse a trailing Z, and
+  # nothing had ever executed it on those versions.
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+
+    name: Python ${{ matrix.python }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Run the suite
+        # No install step: the package has zero runtime dependencies and the
+        # suite uses unittest, so src/ and tests/ on the path is the whole
+        # setup. That is worth preserving — it is also how a user's Lambda or
+        # cron script will run it.
+        run: PYTHONPATH=src:tests python -m unittest discover -s tests -v
+
+  # Lint and type checking run once, on a modern interpreter. Ruff enforces the
+  # 3.9 syntax floor through target-version rather than by being run on 3.9, and
+  # mypy 2.x refuses to target anything below 3.10.
+  quality:
+    runs-on: ubuntu-latest
+    name: Lint and types
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dev tooling
+        run: pip install ruff mypy
+
+      - name: Ruff
+        run: ruff check .
+
+      - name: Mypy
+        run: mypy
+
+  # Proves the wheel is installable and imports under its own name, which the
+  # test suite cannot tell you: the suite runs against src/ on the path, not
+  # against a built artifact.
+  package:
+    runs-on: ubuntu-latest
+    name: Built package
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build
+        run: |
+          pip install build
+          python -m build
+
+      - name: Install the wheel into a clean environment and use it
+        run: |
+          python -m venv /tmp/verify
+          /tmp/verify/bin/pip install dist/*.whl
+          /tmp/verify/bin/python - <<'PY'
+          import broadcast_python
+          from broadcast_python import Broadcast, COLLECTIONS, EVENT_TYPES, webhook
+
+          client = Broadcast(api_token="t", host="https://mail.example.com")
+          assert callable(client.subscribers.list)
+          assert callable(client.migration.subscribers)
+          assert len(COLLECTIONS) == 18, COLLECTIONS
+          assert len(EVENT_TYPES) == 32, len(EVENT_TYPES)
+
+          # The same vector the Ruby, PHP and Node suites use. If this drifts,
+          # webhooks signed by one SDK stop verifying in another.
+          expected = "y19yI03OyA91nDvr3AtwDvmLYUUjpJ4WSjQFk7PYAqc="
+          payload = '{"type":"email.delivered","data":{"id":1}}'
+          assert webhook.compute_signature(payload, 1_800_000_000, "whsec_test_secret") == expected
+
+          print("wheel ok:", broadcast_python.__version__)
+          PY
+
+  # Guards the claim the README makes. The coverage report itself lives in the
+  # broadcast repo and needs Ruby, so this checks the one input this repo owns:
+  # the dynamic-operation manifest must stay in step with the generated
+  # collection methods, or the SDK silently drops below 104/104.
+  coverage-manifest:
+    runs-on: ubuntu-latest
+    name: API coverage manifest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Manifest matches COLLECTIONS
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          import re
+          from broadcast_python.resources.migration import COLLECTIONS
+
+          manifest = open(".api-coverage.yml").read()
+          declared = sorted(re.findall(r"- GET /api/migration/v1/(\w+)", manifest))
+          implemented = sorted(COLLECTIONS)
+
+          assert declared == implemented, (
+              ".api-coverage.yml is out of sync with COLLECTIONS\n"
+              "  declared not implemented: {}\n"
+              "  implemented not declared: {}".format(
+                  set(declared) - set(implemented), set(implemented) - set(declared)
+              )
+          )
+          print(len(implemented), "migration collections, manifest in sync")
+          PY
