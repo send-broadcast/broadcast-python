@@ -492,5 +492,78 @@ class TestChannelScoping(unittest.TestCase):
         self.assertEqual(query_of(opener.last["url"])["broadcast_channel_id"], ["42"])
 
 
+class TestSuppressions(unittest.TestCase):
+    def test_channel_list_add_remove(self):
+        client, opener, _ = make_client()
+
+        client.suppressions.list(page=2, email="example.com")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/suppressions.json")
+        self.assertEqual(query_of(opener.last["url"])["page"], ["2"])
+        self.assertEqual(query_of(opener.last["url"])["email"], ["example.com"])
+
+        client.suppressions.add("blocked@example.com")
+        self.assertEqual(opener.last["method"], "POST")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/suppressions.json")
+        self.assertEqual(opener.last["body"], {"email": "blocked@example.com"})
+
+        client.suppressions.remove("blocked@example.com")
+        self.assertEqual(opener.last["method"], "DELETE")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/suppressions.json")
+        self.assertEqual(opener.last["body"], {"email": "blocked@example.com"})
+
+    def test_channel_bulk(self):
+        client, opener, _ = make_client()
+
+        client.suppressions.bulk_add(["a@example.com", "b@example.com"])
+        self.assertEqual(opener.last["method"], "POST")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/suppressions/bulk.json")
+        self.assertEqual(opener.last["body"], {"emails": ["a@example.com", "b@example.com"]})
+
+        client.suppressions.bulk_remove(["a@example.com"])
+        self.assertEqual(opener.last["method"], "DELETE")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/suppressions/bulk.json")
+        self.assertEqual(opener.last["body"], {"emails": ["a@example.com"]})
+
+    def test_check(self):
+        client, opener, _ = make_client(
+            {"body": {"email": "blocked@example.com", "suppressed": True, "scope": "global"}}
+        )
+
+        result = client.suppressions.check("blocked@example.com")
+        self.assertEqual(opener.last["method"], "GET")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/suppressions/check.json")
+        self.assertEqual(query_of(opener.last["url"])["email"], ["blocked@example.com"])
+        self.assertTrue(result["suppressed"])
+        self.assertEqual(result["scope"], "global")
+
+    def test_global_list_add_remove_bulk(self):
+        client, opener, _ = make_client()
+
+        client.global_suppressions.list()
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/global_suppressions.json")
+
+        client.global_suppressions.add("blocked@example.com")
+        self.assertEqual(opener.last["method"], "POST")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/global_suppressions.json")
+        self.assertEqual(opener.last["body"], {"email": "blocked@example.com"})
+
+        client.global_suppressions.remove("blocked@example.com")
+        self.assertEqual(opener.last["method"], "DELETE")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/global_suppressions.json")
+
+        client.global_suppressions.bulk_add(["a@example.com"])
+        self.assertEqual(opener.last["method"], "POST")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/global_suppressions/bulk.json")
+
+        client.global_suppressions.bulk_remove(["a@example.com"])
+        self.assertEqual(opener.last["method"], "DELETE")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/global_suppressions/bulk.json")
+        self.assertEqual(opener.last["body"], {"emails": ["a@example.com"]})
+
+    def test_global_has_no_check(self):
+        client, _, _ = make_client()
+        self.assertFalse(hasattr(client.global_suppressions, "check"))
+
+
 if __name__ == "__main__":
     unittest.main()

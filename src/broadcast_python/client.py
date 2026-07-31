@@ -7,11 +7,13 @@ from .resources.autopilots import Autopilots
 from .resources.broadcasts import Broadcasts
 from .resources.discovery import Discovery
 from .resources.email_servers import EmailServers
+from .resources.global_suppressions import GlobalSuppressions
 from .resources.migration import Migration
 from .resources.opt_in_forms import OptInForms
 from .resources.segments import Segments
 from .resources.sequences import Sequences
 from .resources.subscribers import Subscribers
+from .resources.suppressions import Suppressions
 from .resources.templates import Templates
 from .resources.transactionals import Transactionals
 from .resources.webhook_endpoints import WebhookEndpoints
@@ -43,6 +45,12 @@ class Broadcast:
         self.email_servers = EmailServers(self)
         self.autopilots = Autopilots(self)
         self.discovery = Discovery(self)
+        #: The current channel's suppression list (plus ``check``, which
+        #: reads the global list too).
+        self.suppressions = Suppressions(self)
+        #: The installation-wide suppression list. Requires an admin (system)
+        #: API token.
+        self.global_suppressions = GlobalSuppressions(self)
         #: Read-only export endpoints. Requires an admin (system) API token.
         self.migration = Migration(self)
 
