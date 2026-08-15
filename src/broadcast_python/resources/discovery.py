@@ -33,3 +33,17 @@ class Discovery(BaseResource):
         Returns a ``str``, not a dict — this endpoint serves ``text/plain``.
         """
         return self._get("/api/v1/skill", raw=True)
+
+    def openapi(self) -> str:
+        """This installation's own OpenAPI document, as YAML.
+
+        Returns a ``str``, not a dict — this endpoint serves
+        ``application/yaml``.
+
+        The server URL inside the document is rewritten by the installation to
+        the host that served it, so the result feeds a client generator or an
+        API explorer without hand-editing. Preferable to a spec copied from
+        elsewhere: a 2.28 install serves the 2.28 surface, so the document
+        cannot drift from the routes it describes.
+        """
+        return self._get("/api/v1/openapi", raw=True)

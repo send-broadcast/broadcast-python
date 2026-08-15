@@ -37,6 +37,18 @@ class TestDiscovery(unittest.TestCase):
         self.assertIsInstance(result, str)
         self.assertEqual(path_of(opener.last["url"]), "/api/v1/skill")
 
+    def test_openapi_is_raw_yaml_text(self):
+        client, opener, _ = make_client(
+            {
+                "status": 200,
+                "text": "openapi: 3.1.0\n",
+                "headers": {"content-type": "application/yaml; charset=utf-8"},
+            }
+        )
+        result = client.discovery.openapi()
+        self.assertIsInstance(result, str)
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/openapi")
+
     def test_client_shims(self):
         client, opener, _ = make_client()
         client.whoami()

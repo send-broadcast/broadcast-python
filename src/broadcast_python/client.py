@@ -105,6 +105,9 @@ class Broadcast:
     def skill(self) -> str:
         return self.discovery.skill()
 
+    def openapi(self) -> str:
+        return self.discovery.openapi()
+
     # --- Internal ---
 
     def request(
