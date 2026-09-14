@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- `client.channel_design.get()` for `GET /api/v1/channel/design`: the token
+  channel's brand kit (colours, font and font stack, layout, logo URL, website
+  and social links), fully resolved and read-only. Needs `templates_read`.
+
 ## [0.1.0] - 2026-07-28
 
 Published to PyPI as `broadcast-python`; the import module is `broadcast_python`,

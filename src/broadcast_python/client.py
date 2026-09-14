@@ -5,6 +5,7 @@ from .configuration import Configuration
 from .connection import Connection
 from .resources.autopilots import Autopilots
 from .resources.broadcasts import Broadcasts
+from .resources.channel_design import ChannelDesign
 from .resources.discovery import Discovery
 from .resources.email_servers import EmailServers
 from .resources.global_suppressions import GlobalSuppressions
@@ -39,6 +40,8 @@ class Broadcast:
         self.broadcasts = Broadcasts(self)
         self.segments = Segments(self)
         self.templates = Templates(self)
+        #: The channel's brand kit (Settings -> Design). Read-only.
+        self.channel_design = ChannelDesign(self)
         self.webhook_endpoints = WebhookEndpoints(self)
         self.transactionals = Transactionals(self)
         self.opt_in_forms = OptInForms(self)
