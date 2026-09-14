@@ -2,7 +2,7 @@
 
 Official Python client for [Broadcast](https://sendbroadcast.net), the self-hosted email marketing platform.
 
-Works with any Broadcast instance — self-hosted or SaaS. Covers **104/104 API operations**, verified against the API's generated OpenAPI document.
+Works with any Broadcast instance — self-hosted or SaaS. Covers **117/117 API operations**, verified against the API's generated OpenAPI document.
 
 📖 **[Python SDK documentation](https://sendbroadcast.net/docs/python-sdk)** · [API reference](https://sendbroadcast.net/docs/api-authentication) · [All docs](https://sendbroadcast.net/docs)
 
@@ -222,6 +222,19 @@ client.opt_in_forms.duplicate(id, label="Copy")
 
 Reading a segment recounts its members server-side, so `segments.get` is not free.
 
+### Channel design (brand kit)
+
+```python
+kit = client.channel_design.get()
+kit["colors"]["accent"]         # "#2563eb"
+kit["typography"]["font_stack"] # email-safe CSS font stack
+kit["brand"]["logo_url"]        # public URL, or None
+```
+
+Read-only, for the token's own channel, fully resolved (defaults filled in).
+Needs `templates_read`. Block emails built with the drag-and-drop editor inherit
+these values.
+
 ### Email servers
 
 **Credential redaction guard.** The API returns credentials bullet-masked
@@ -354,7 +367,7 @@ integration requires.
 | Sequences | `sequences_read` -- list, get, list steps | `sequences_write` -- create, update, delete, manage steps, enroll subscribers |
 | Broadcasts | `broadcasts_read` -- list, get, statistics | `broadcasts_write` -- create, update, delete, send, schedule |
 | Segments | `segments_read` -- list, get | `segments_write` -- create, update, delete |
-| Templates | `templates_read` -- list, get | `templates_write` -- create, update, delete |
+| Templates | `templates_read` -- list, get, channel_design.get | `templates_write` -- create, update, delete |
 | Opt-In Forms | `opt_in_forms_read` -- list, get, analytics | `opt_in_forms_write` -- create, update, delete, create_variant, duplicate |
 | Email Servers | `email_servers_read` -- list, get | `email_servers_write` -- create, update, delete, test_connection, copy_to_channel (admin) |
 | Webhook Endpoints | `webhook_endpoints_read` -- list, get, deliveries | `webhook_endpoints_write` -- create, update, delete, test |

@@ -577,5 +577,36 @@ class TestSuppressions(unittest.TestCase):
         self.assertFalse(hasattr(client.global_suppressions, "check"))
 
 
+class TestChannelDesign(unittest.TestCase):
+    def test_get_reads_the_token_channel_brand_kit(self):
+        kit = {
+            "colors": {"accent": "#ff5500", "text": "#18181b"},
+            "typography": {"font": "georgia", "font_stack": "Georgia, 'Times New Roman', serif"},
+            "layout": {"width": 600, "radius": 8},
+            "brand": {
+                "logo_url": "https://mail.example.com/files/abc",
+                "logo_width": 180,
+                "website_url": "https://acme.example",
+                "social_links": [{"network": "x", "url": "https://x.com/acme"}],
+                "social_icon_style": "dark",
+            },
+        }
+        client, opener, _ = make_client({"body": kit})
+
+        result = client.channel_design.get()
+        self.assertEqual(opener.last["method"], "GET")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/channel/design")
+        self.assertIsNone(opener.last["body"])
+        self.assertEqual(result["colors"]["accent"], "#ff5500")
+        self.assertEqual(result["typography"]["font_stack"], "Georgia, 'Times New Roman', serif")
+        self.assertEqual(result["layout"]["width"], 600)
+        self.assertEqual(result["brand"]["social_links"], [{"network": "x", "url": "https://x.com/acme"}])
+
+    def test_is_read_only(self):
+        client, _, _ = make_client()
+        for method in ("create", "update", "delete", "list"):
+            self.assertFalse(hasattr(client.channel_design, method), method)
+
+
 if __name__ == "__main__":
     unittest.main()
