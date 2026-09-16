@@ -249,6 +249,39 @@ client.email_servers.update(id, name="Renamed", smtp_password=server["smtp_passw
 # -> sends only {"name": "Renamed"}, warns about the dropped field
 ```
 
+### Users
+
+Requires an **admin API token**. Sudo users are read-only through this API —
+update, deactivate, activate, delete, and permission writes on one raise
+`AuthorizationError`. Sudo access itself can never be granted through the API.
+
+```python
+client.users.list(status="active", q="ada")
+user = client.users.create(email="ada@example.com", first_name="Ada", last_name="L", password="x")
+client.users.update(user["id"], first_name="Grace")
+client.users.deactivate(user["id"])
+client.users.activate(user["id"])
+client.users.delete(user["id"])
+```
+
+Channel and system permissions:
+
+```python
+client.users.channel_permissions(user["id"])
+
+# PUT replaces the whole channel record -- pass exactly one of
+# permissions, role, or preset_id
+client.users.set_channel_permissions(user["id"], channel_id, role="Editor")
+client.users.set_channel_permissions(user["id"], channel_id, permissions={"subscribers_read": True})
+client.users.remove_channel_permissions(user["id"], channel_id)
+
+# Same rule, applied to several channels at once
+client.users.bulk_channel_permissions(user["id"], [channel_id, other_channel_id], role="Viewer")
+
+client.users.system_permissions(user["id"])
+client.users.update_system_permissions(user["id"], {"user_management": True})
+```
+
 ### Autopilot
 
 ```python
@@ -372,6 +405,7 @@ integration requires.
 | Email Servers | `email_servers_read` -- list, get | `email_servers_write` -- create, update, delete, test_connection, copy_to_channel (admin) |
 | Webhook Endpoints | `webhook_endpoints_read` -- list, get, deliveries | `webhook_endpoints_write` -- create, update, delete, test |
 | Autopilot | `autopilot_read` -- list, get, runs | `autopilot_write` -- create, update, delete, activate, pause, deactivate, trigger_run |
+| Users (admin token only) | `users_read` -- list, get, channel_permissions, system_permissions | `users_write` -- create, update, deactivate, activate, delete, permission writes |
 
 ---
 
