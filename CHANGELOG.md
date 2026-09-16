@@ -8,6 +8,14 @@ All notable changes to this project will be documented in this file.
 - `client.channel_design.get()` for `GET /api/v1/channel/design`: the token
   channel's brand kit (colours, font and font stack, layout, logo URL, website
   and social links), fully resolved and read-only. Needs `templates_read`.
+- `client.users` resource for the admin-only Users API: `list`, `get`,
+  `create`, `update`, `deactivate`, `activate`, `delete`,
+  `channel_permissions`, `set_channel_permissions` (PUT, replaces the whole
+  channel record; requires exactly one of `permissions`/`role`/`preset_id`),
+  `remove_channel_permissions`, `bulk_channel_permissions`,
+  `system_permissions`, `update_system_permissions`. Requires an admin API
+  token; sudo users are read-only and sudo access can never be granted
+  through the API. Adds `BaseResource._put`.
 
 ## [0.1.0] - 2026-07-28
 

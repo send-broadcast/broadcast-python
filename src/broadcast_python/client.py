@@ -17,6 +17,7 @@ from .resources.subscribers import Subscribers
 from .resources.suppressions import Suppressions
 from .resources.templates import Templates
 from .resources.transactionals import Transactionals
+from .resources.users import Users
 from .resources.webhook_endpoints import WebhookEndpoints
 
 Id = Union[str, int]
@@ -56,6 +57,9 @@ class Broadcast:
         self.global_suppressions = GlobalSuppressions(self)
         #: Read-only export endpoints. Requires an admin (system) API token.
         self.migration = Migration(self)
+        #: Installation users and their permissions. Requires an admin
+        #: (system) API token; sudo users are read-only through this API.
+        self.users = Users(self)
 
     # --- Channel scoping (admin/system tokens) ---
 

@@ -25,6 +25,9 @@ class BaseResource:
     def _patch(self, path: str, body: Optional[Dict[str, Any]] = None) -> Any:
         return self._client.request("PATCH", path, body or {})
 
+    def _put(self, path: str, body: Optional[Dict[str, Any]] = None) -> Any:
+        return self._client.request("PUT", path, body or {})
+
     def _delete(self, path: str, body: Optional[Dict[str, Any]] = None) -> Any:
         return self._client.request("DELETE", path, body)
 

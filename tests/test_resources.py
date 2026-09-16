@@ -608,5 +608,131 @@ class TestChannelDesign(unittest.TestCase):
             self.assertFalse(hasattr(client.channel_design, method), method)
 
 
+class TestUsers(unittest.TestCase):
+    def test_list_omits_none_params(self):
+        client, opener, _ = make_client()
+        client.users.list(limit=10, offset=5, q="ada", status="active")
+        self.assertEqual(opener.last["method"], "GET")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users")
+        query = query_of(opener.last["url"])
+        self.assertEqual(query["limit"], ["10"])
+        self.assertEqual(query["offset"], ["5"])
+        self.assertEqual(query["q"], ["ada"])
+        self.assertEqual(query["status"], ["active"])
+
+        client.users.list()
+        self.assertEqual(query_of(opener.last["url"]), {})
+
+    def test_get(self):
+        client, opener, _ = make_client()
+        client.users.get(7)
+        self.assertEqual(opener.last["method"], "GET")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7")
+
+    def test_create_wraps_under_user(self):
+        client, opener, _ = make_client()
+        client.users.create(email="ada@example.com", first_name="Ada", last_name="L", password="x")
+        self.assertEqual(opener.last["method"], "POST")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users")
+        self.assertEqual(
+            opener.last["body"],
+            {"user": {"email": "ada@example.com", "first_name": "Ada", "last_name": "L", "password": "x"}},
+        )
+
+    def test_update_wraps_under_user(self):
+        client, opener, _ = make_client()
+        client.users.update(7, first_name="Grace")
+        self.assertEqual(opener.last["method"], "PATCH")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7")
+        self.assertEqual(opener.last["body"], {"user": {"first_name": "Grace"}})
+
+    def test_deactivate_and_activate(self):
+        client, opener, _ = make_client()
+        client.users.deactivate(7)
+        self.assertEqual(opener.last["method"], "POST")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7/deactivate")
+
+        client.users.activate(7)
+        self.assertEqual(opener.last["method"], "POST")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7/activate")
+
+    def test_delete(self):
+        client, opener, _ = make_client()
+        client.users.delete(7)
+        self.assertEqual(opener.last["method"], "DELETE")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7")
+
+    def test_channel_permissions_list(self):
+        client, opener, _ = make_client()
+        client.users.channel_permissions(7)
+        self.assertEqual(opener.last["method"], "GET")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7/channel_permissions")
+
+    def test_set_channel_permissions_with_permissions(self):
+        client, opener, _ = make_client()
+        client.users.set_channel_permissions(7, 3, permissions={"subscribers_read": True})
+        self.assertEqual(opener.last["method"], "PUT")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7/channel_permissions/3")
+        self.assertEqual(opener.last["body"], {"permissions": {"subscribers_read": True}})
+
+    def test_set_channel_permissions_with_role(self):
+        client, opener, _ = make_client()
+        client.users.set_channel_permissions(7, 3, role="Viewer")
+        self.assertEqual(opener.last["method"], "PUT")
+        self.assertEqual(opener.last["body"], {"role": "Viewer"})
+
+    def test_set_channel_permissions_with_preset_id(self):
+        client, opener, _ = make_client()
+        client.users.set_channel_permissions(7, 3, preset_id=12)
+        self.assertEqual(opener.last["method"], "PUT")
+        self.assertEqual(opener.last["body"], {"preset_id": 12})
+
+    def test_set_channel_permissions_requires_exactly_one(self):
+        client, opener, _ = make_client()
+        with self.assertRaises(ValueError):
+            client.users.set_channel_permissions(7, 3)
+        with self.assertRaises(ValueError):
+            client.users.set_channel_permissions(7, 3, permissions={"a": True}, role="Viewer")
+        with self.assertRaises(ValueError):
+            client.users.set_channel_permissions(
+                7, 3, permissions={"a": True}, role="Viewer", preset_id=12
+            )
+        self.assertEqual(len(opener.calls), 0)
+
+    def test_remove_channel_permissions(self):
+        client, opener, _ = make_client()
+        client.users.remove_channel_permissions(7, 3)
+        self.assertEqual(opener.last["method"], "DELETE")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7/channel_permissions/3")
+
+    def test_bulk_channel_permissions_with_role(self):
+        client, opener, _ = make_client()
+        client.users.bulk_channel_permissions(7, [3, 4], role="Editor")
+        self.assertEqual(opener.last["method"], "POST")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7/channel_permissions/bulk")
+        self.assertEqual(
+            opener.last["body"], {"broadcast_channel_ids": [3, 4], "role": "Editor"}
+        )
+
+    def test_bulk_channel_permissions_requires_exactly_one(self):
+        client, opener, _ = make_client()
+        with self.assertRaises(ValueError):
+            client.users.bulk_channel_permissions(7, [3, 4])
+        with self.assertRaises(ValueError):
+            client.users.bulk_channel_permissions(7, [3, 4], permissions={"a": True}, preset_id=1)
+        self.assertEqual(len(opener.calls), 0)
+
+    def test_system_permissions_get_and_update(self):
+        client, opener, _ = make_client()
+        client.users.system_permissions(7)
+        self.assertEqual(opener.last["method"], "GET")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7/system_permissions")
+
+        client.users.update_system_permissions(7, {"user_management": True})
+        self.assertEqual(opener.last["method"], "PATCH")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/users/7/system_permissions")
+        self.assertEqual(opener.last["body"], {"permissions": {"user_management": True}})
+
+
 if __name__ == "__main__":
     unittest.main()
