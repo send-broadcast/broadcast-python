@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- `subscribers.purged` and `subscribers.purge_failed` webhook event types, in
+  `SUBSCRIBER_EVENTS` and `EVENT_TYPES` (now 34). A purge of the whole list
+  sends one of these instead of a `subscriber.deleted` per subscriber.
 - `client.channel_design.get()` for `GET /api/v1/channel/design`: the token
   channel's brand kit (colours, font and font stack, layout, logo URL, website
   and social links), fully resolved and read-only. Needs `templates_read`.

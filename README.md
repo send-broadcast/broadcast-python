@@ -384,7 +384,9 @@ every rejection rather than distinguishing them.
 Pass the **raw** request body. Re-serialising a parsed dict changes the bytes
 and verification will fail.
 
-`broadcast_python.EVENT_TYPES` lists all 32 event names.
+`broadcast_python.EVENT_TYPES` lists all 34 event names. `SUBSCRIBER_EVENTS`
+includes `subscribers.purged` and `subscribers.purge_failed`: a purge of the
+whole list sends one of these instead of a `subscriber.deleted` per subscriber.
 
 ---
 
