@@ -100,7 +100,7 @@ jobs:
           assert callable(client.subscribers.list)
           assert callable(client.migration.subscribers)
           assert len(COLLECTIONS) == 18, COLLECTIONS
-          assert len(EVENT_TYPES) == 32, len(EVENT_TYPES)
+          assert len(EVENT_TYPES) == 34, len(EVENT_TYPES)
 
           # The same vector the Ruby, PHP and Node suites use. If this drifts,
           # webhooks signed by one SDK stop verifying in another.
