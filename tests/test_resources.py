@@ -409,11 +409,11 @@ class TestMigration(unittest.TestCase):
     COLLECTIONS = (
         "channels", "subscribers", "templates", "segments", "sequences", "email_servers",
         "opt_in_forms", "broadcasts", "outbound_receipts", "webhook_endpoints", "tokens",
-        "suppressions", "tags", "users", "link_redirects", "link_clicks",
+        "suppressions", "unsubscribed_emails", "tags", "users", "link_redirects", "link_clicks",
         "subscriber_histories", "file_assets",
     )
 
-    def test_all_eighteen_collections(self):
+    def test_all_nineteen_collections(self):
         client, opener, _ = make_client({"body": {"data": [], "pagination": {"has_more": False}}})
         for collection in self.COLLECTIONS:
             getattr(client.migration, collection)(limit=10)
@@ -432,6 +432,21 @@ class TestMigration(unittest.TestCase):
             {"status": 200, "text": b"\x89PNG", "headers": {"content-type": "image/png"}}
         )
         self.assertEqual(client.migration.download_file_asset(3), b"\x89PNG")
+
+    # The channel suppression list (UnsubscribedEmail), separate from
+    # suppressions. Without it an export silently dropped the list.
+    def test_each_record_pages_through_unsubscribed_emails(self):
+        client, opener, _ = make_client(
+            [
+                {"body": {"data": [{"email": "gone@example.com"}], "pagination": {"has_more": True, "limit": 1}}},
+                {"body": {"data": [{"email": "left@example.com"}], "pagination": {"has_more": False, "limit": 1}}},
+            ]
+        )
+        emails = [r["email"] for r in client.migration.each_record("unsubscribed_emails", limit=1)]
+
+        self.assertEqual(emails, ["gone@example.com", "left@example.com"])
+        self.assertEqual(path_of(opener.calls[0]["url"]), "/api/migration/v1/unsubscribed_emails")
+        self.assertEqual(query_of(opener.calls[1]["url"])["offset"], ["1"])
 
     def test_each_record_pages_until_has_more_is_false(self):
         client, opener, _ = make_client(

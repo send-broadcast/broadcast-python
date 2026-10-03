@@ -35,6 +35,7 @@ COLLECTIONS = (
     "webhook_endpoints",
     "tokens",
     "suppressions",
+    "unsubscribed_emails",
     "tags",
     "users",
     "link_redirects",
@@ -106,7 +107,7 @@ def _make_collection_method(name: str):
     return method
 
 
-# Generated rather than hand-written: 18 near-identical methods invite the kind
+# Generated rather than hand-written: 19 near-identical methods invite the kind
 # of copy-paste drift this whole SDK family exists to prevent. Declared in
 # .api-coverage.yml so the coverage report still counts them.
 for _collection in COLLECTIONS:

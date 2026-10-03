@@ -70,14 +70,14 @@ class TestPublicSurface(unittest.TestCase):
         ):
             self.assertTrue(hasattr(client, name), "missing resource: {}".format(name))
 
-    def test_migration_exposes_all_eighteen_collections(self):
+    def test_migration_exposes_all_nineteen_collections(self):
         client = broadcast_python.Broadcast(api_token="t", host="https://mail.example.com")
         for collection in broadcast_python.COLLECTIONS:
             self.assertTrue(
                 callable(getattr(client.migration, collection, None)),
                 "missing collection: {}".format(collection),
             )
-        self.assertEqual(len(broadcast_python.COLLECTIONS), 18)
+        self.assertEqual(len(broadcast_python.COLLECTIONS), 19)
 
     def test_all_exports_resolve(self):
         for name in broadcast_python.__all__:

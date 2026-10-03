@@ -339,6 +339,11 @@ client.migration.manifest()
 for sub in client.migration.each_record("subscribers"):
     ...   # auto-pages; advances by the limit the server actually applied
 
+# Suppressed addresses live in two lists; export both:
+# suppressions = global suppression list, unsubscribed_emails = the channel's own
+for row in client.migration.each_record("unsubscribed_emails"):
+    ...   # {"id", "email", "broadcast_channel_id", "created_at", "updated_at"}
+
 data = client.migration.download_file_asset(id)   # bytes
 ```
 
