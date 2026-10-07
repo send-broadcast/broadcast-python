@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .base import BaseResource
 
@@ -46,8 +46,13 @@ class Subscribers(BaseResource):
 
         return self._post("/api/v1/subscribers.json", payload)
 
-    def update(self, email: str, **attrs: Any) -> Any:
-        return self._patch("/api/v1/subscribers.json", {"email": email, "subscriber": attrs})
+    def update(self, email: str, custom_data_mode: Optional[str] = None, **attrs: Any) -> Any:
+        """custom_data_mode: "replace" (the API default) stores custom_data as sent;
+        "merge" changes only the keys sent, and a None value deletes that key."""
+        payload: Dict[str, Any] = {"email": email, "subscriber": attrs}
+        if custom_data_mode:
+            payload["custom_data_mode"] = custom_data_mode
+        return self._patch("/api/v1/subscribers.json", payload)
 
     def add_tags(self, email: str, tags: List[str]) -> Any:
         return self._post("/api/v1/subscribers/add_tag.json", {"email": email, "tags": tags})

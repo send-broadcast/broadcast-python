@@ -64,7 +64,7 @@ class TestPublicSurface(unittest.TestCase):
     def test_every_resource_is_reachable(self):
         client = broadcast_python.Broadcast(api_token="t", host="https://mail.example.com")
         for name in (
-            "subscribers", "sequences", "broadcasts", "segments", "templates",
+            "subscribers", "sequences", "broadcasts", "segments", "topics", "templates",
             "webhook_endpoints", "transactionals", "opt_in_forms", "email_servers",
             "autopilots", "discovery", "migration",
         ):

@@ -25,6 +25,7 @@ EMAIL_EVENTS = (
 SUBSCRIBER_EVENTS = (
     "subscriber.created",
     "subscriber.updated",
+    "subscriber.preferences_updated",
     "subscriber.deleted",
     "subscriber.subscribed",
     "subscriber.unsubscribed",

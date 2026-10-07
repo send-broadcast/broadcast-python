@@ -16,6 +16,7 @@ from .resources.sequences import Sequences
 from .resources.subscribers import Subscribers
 from .resources.suppressions import Suppressions
 from .resources.templates import Templates
+from .resources.topics import Topics
 from .resources.transactionals import Transactionals
 from .resources.users import Users
 from .resources.webhook_endpoints import WebhookEndpoints
@@ -40,6 +41,7 @@ class Broadcast:
         self.sequences = Sequences(self)
         self.broadcasts = Broadcasts(self)
         self.segments = Segments(self)
+        self.topics = Topics(self)
         self.templates = Templates(self)
         #: The channel's brand kit (Settings -> Design). Read-only.
         self.channel_design = ChannelDesign(self)

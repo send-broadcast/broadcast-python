@@ -86,11 +86,12 @@ class TestComputeSignature(unittest.TestCase):
 class TestEventTypes(unittest.TestCase):
     def test_counts(self):
         self.assertEqual(len(EMAIL_EVENTS), 8)
-        self.assertEqual(len(SUBSCRIBER_EVENTS), 9)
+        self.assertEqual(len(SUBSCRIBER_EVENTS), 10)
+        self.assertIn("subscriber.preferences_updated", SUBSCRIBER_EVENTS)
         self.assertEqual(len(BROADCAST_EVENTS), 8)
         self.assertEqual(len(SEQUENCE_EVENTS), 7)
         self.assertEqual(len(SYSTEM_EVENTS), 2)
-        self.assertEqual(len(EVENT_TYPES), 34)
+        self.assertEqual(len(EVENT_TYPES), 35)
 
     def test_no_duplicates(self):
         self.assertEqual(len(set(EVENT_TYPES)), len(EVENT_TYPES))

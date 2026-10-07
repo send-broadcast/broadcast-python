@@ -209,6 +209,38 @@ class TestSequences(unittest.TestCase):
         self.assertEqual(opener.last["method"], "DELETE")
 
 
+class TestTopics(unittest.TestCase):
+    def test_topics(self):
+        client, opener, _ = make_client()
+        client.topics.list()
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/topics.json")
+
+        client.topics.get(3)
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/topics/3.json")
+
+        client.topics.create(name="Webinars", custom_data_key="sub_webinars")
+        self.assertEqual((opener.last["method"], path_of(opener.last["url"])), ("POST", "/api/v1/topics"))
+        self.assertEqual(opener.last["body"], {"topic": {"name": "Webinars", "custom_data_key": "sub_webinars"}})
+
+        client.topics.update(3, unset_receives=True)
+        self.assertEqual((opener.last["method"], path_of(opener.last["url"])), ("PATCH", "/api/v1/topics/3"))
+        self.assertEqual(opener.last["body"], {"topic": {"unset_receives": True}})
+
+        client.topics.delete(3)
+        self.assertEqual((opener.last["method"], path_of(opener.last["url"])), ("DELETE", "/api/v1/topics/3"))
+
+    def test_subscriber_update_custom_data_mode(self):
+        client, opener, _ = make_client()
+        client.subscribers.update("a@b.com", custom_data={"sub_offers": False}, custom_data_mode="merge")
+        self.assertEqual(
+            opener.last["body"],
+            {"email": "a@b.com", "custom_data_mode": "merge", "subscriber": {"custom_data": {"sub_offers": False}}},
+        )
+
+        client.subscribers.update("a@b.com", first_name="Grace")
+        self.assertEqual(opener.last["body"], {"email": "a@b.com", "subscriber": {"first_name": "Grace"}})
+
+
 class TestSegmentsTemplatesForms(unittest.TestCase):
     def test_segments(self):
         client, opener, _ = make_client()

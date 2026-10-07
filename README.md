@@ -222,6 +222,32 @@ client.opt_in_forms.duplicate(id, label="Copy")
 
 Reading a segment recounts its members server-side, so `segments.get` is not free.
 
+### Topics
+
+A topic is one kind of email subscribers opt in to or out of (webinars, offers).
+Its value lives in a top-level `custom_data` key (`True`, `False`, or no value)
+or in a tag. `unset_receives` decides, at send time, whether a subscriber with no
+value receives it; Broadcast never writes a default. Topics use the subscriber
+permissions.
+
+```python
+topic = client.topics.create(name="Webinars", custom_data_key="sub_webinars")
+client.topics.create(name="News", storage="tag", tag_name="news")
+client.topics.list()
+client.topics.update(topic["id"], unset_receives=False)
+client.topics.delete(topic["id"])  # 422 while a broadcast or sequence uses it
+
+# Send to a topic: (segments) AND topic
+client.broadcasts.create(subject="Webinar", body="...", segment_ids=[2], topic_id=topic["id"])
+
+# Change only the keys you send (None deletes a key); the default replaces custom_data
+client.subscribers.update("jane@example.com", custom_data={"sub_webinars": False}, custom_data_mode="merge")
+```
+
+The subscriber JSON has `topics`: each topic's stored value (`True`, `False`, or
+`None`). Topic changes fire `subscriber.preferences_updated` as well as
+`subscriber.updated`.
+
 ### Channel design (brand kit)
 
 ```python
