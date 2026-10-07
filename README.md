@@ -216,6 +216,8 @@ client.sequences.move_step(id, step_id, under_id)
 client.segments.create(name="VIPs")
 client.templates.create(label="Welcome", subject="Hi", body="...")
 client.opt_in_forms.analytics(id, start_date=date(2026, 1, 1))
+# How often the same visitor sees a popup: one of TRIGGER_FREQUENCIES, or ValidationError (422).
+client.opt_in_forms.update(id, trigger_settings={"frequency": "once_per_day"})
 client.opt_in_forms.create_variant(id, name="B", weight=50)
 client.opt_in_forms.duplicate(id, label="Copy")
 ```

@@ -292,6 +292,35 @@ class TestSegmentsTemplatesForms(unittest.TestCase):
         self.assertEqual(query_of(opener.last["url"])["start_date"], ["2026-01-01"])
 
 
+class TestOptInFormFrequency(unittest.TestCase):
+    def test_trigger_frequencies(self):
+        from broadcast_python import TRIGGER_FREQUENCIES
+
+        self.assertEqual(
+            TRIGGER_FREQUENCIES,
+            ("always", "every_visit", "once_per_session", "once_per_day", "once_per_week", "once"),
+        )
+
+    # The server decides which words it accepts; the client sends what it is
+    # given, so an older server is never refused a word it would take.
+    def test_trigger_settings_pass_through_verbatim(self):
+        client, opener, _ = make_client()
+        client.opt_in_forms.update(6, trigger_settings={"frequency": "weekly"})
+        self.assertEqual(opener.last["body"], {"opt_in_form": {"trigger_settings": {"frequency": "weekly"}}})
+
+    def test_unknown_frequency_raises_validation_error(self):
+        from broadcast_python import ValidationError
+
+        message = (
+            'Trigger settings frequency "weekly" is not known. '
+            "Use one of: always, every_visit, once_per_session, once_per_day, once_per_week, once"
+        )
+        client, _, _ = make_client({"status": 422, "body": {"error": message}})
+        with self.assertRaises(ValidationError) as caught:
+            client.opt_in_forms.update(6, trigger_settings={"frequency": "weekly"})
+        self.assertIn('"weekly" is not known', str(caught.exception))
+
+
 class TestEmailServers(unittest.TestCase):
     def test_crud_and_actions(self):
         client, opener, _ = make_client()

@@ -28,6 +28,7 @@ from .errors import (
 )
 from .resources.email_servers import REDACTED_FIELDS
 from .resources.migration import COLLECTIONS
+from .resources.opt_in_forms import TRIGGER_FREQUENCIES
 from .resources.transactionals import MAX_IDEMPOTENCY_KEY_LENGTH
 from .response import RateLimit, Response, Warning_
 from .version import VERSION
@@ -42,6 +43,7 @@ __all__ = [
     "EVENT_TYPES",
     "MAX_IDEMPOTENCY_KEY_LENGTH",
     "REDACTED_FIELDS",
+    "TRIGGER_FREQUENCIES",
     "VERSION",
     "WARNINGS_MODES",
     "APIError",

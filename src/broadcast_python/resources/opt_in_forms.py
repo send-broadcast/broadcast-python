@@ -5,6 +5,12 @@ from .base import BaseResource, compact
 
 Id = Union[str, int]
 
+#: The words ``trigger_settings["frequency"]`` accepts: how often the same
+#: visitor sees a popup. ``always`` and ``every_visit`` mean the same. The server
+#: refuses any other word with 422 (:class:`ValidationError`); the client does
+#: not check, so an older server is never refused a word it would take.
+TRIGGER_FREQUENCIES = ("always", "every_visit", "once_per_session", "once_per_day", "once_per_week", "once")
+
 
 class OptInForms(BaseResource):
     def list(self, **params: Any) -> Any:
@@ -23,6 +29,9 @@ class OptInForms(BaseResource):
         Nested settings dicts (``theme_settings``, ``automation_settings``,
         ``security_settings``, ``trigger_settings``, ``widget_settings``) and
         the block arrays are passed through verbatim.
+        ``trigger_settings["frequency"]`` must be one of
+        :data:`TRIGGER_FREQUENCIES`; any other word raises
+        :class:`ValidationError` (422).
         """
         return self._post("/api/v1/opt_in_forms", {"opt_in_form": attrs})
 
