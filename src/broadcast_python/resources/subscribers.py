@@ -33,7 +33,11 @@ class Subscribers(BaseResource):
         timestamp when migrating an already-confirmed list off another provider.
         It is ignored (with a warning) on update.
 
-        ``unsubscribed_at`` is never settable here; use :meth:`unsubscribe`.
+        ``unsubscribed_at`` (any token, create only, ISO 8601) stores the
+        subscriber as unsubscribed in the same request, for migrating a list
+        with its opt-outs intact: no confirmation email, 422 if it is in the
+        future or sent with ``is_active=True``. To unsubscribe an existing
+        subscriber, use :meth:`unsubscribe`.
         """
         double_opt_in = attrs.pop("double_opt_in", None)
         confirmation_template_id = attrs.pop("confirmation_template_id", None)

@@ -79,6 +79,14 @@ class TestSubscribers(unittest.TestCase):
             opener.last["body"], {"subscriber": {"email": "a@b.com", "first_name": "Ada", "tags": ["vip"]}}
         )
 
+    def test_create_keeps_unsubscribed_at_inside_subscriber(self):
+        client, opener, _ = make_client()
+        client.subscribers.create(email="gone@b.com", unsubscribed_at="2025-03-14T09:30:00Z")
+
+        self.assertEqual(
+            opener.last["body"], {"subscriber": {"email": "gone@b.com", "unsubscribed_at": "2025-03-14T09:30:00Z"}}
+        )
+
     def test_create_lifts_double_opt_in_to_top_level(self):
         client, opener, _ = make_client()
         client.subscribers.create(email="a@b.com", double_opt_in=True, confirmation_template_id=7)

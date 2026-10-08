@@ -36,7 +36,8 @@ class Autopilots(BaseResource):
         write-only. Scheduling takes ``schedule_frequency`` (daily, weekly,
         biweekly, monthly), ``schedule_day_of_week``, ``schedule_day_of_month``,
         ``schedule_time``, ``schedule_timezone``. ``segment_ids`` restricts the
-        newsletter's audience.
+        newsletter's audience; ``excluded_segment_ids`` lists segments its
+        drafts never reach.
         """
         return self._post("/api/v1/autopilots", {"autopilot": attrs})
 
