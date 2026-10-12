@@ -265,9 +265,49 @@ kit["typography"]["font_stack"] # email-safe CSS font stack
 kit["brand"]["logo_url"]        # public URL, or None
 ```
 
-Read-only, for the token's own channel, fully resolved (defaults filled in).
-Needs `templates_read`. Block emails built with the drag-and-drop editor inherit
-these values.
+For the token's own channel, fully resolved (defaults filled in). Reading
+needs `templates_read` (or, from Broadcast 2.46.0, `channel_settings_read`).
+Block emails built with the drag-and-drop editor inherit these values.
+
+From Broadcast 2.46.0 you can change it. This needs `channel_settings_write`:
+
+```python
+kit = client.channel_design.update({
+    "colors": {"accent": "#ff5500"},
+    "typography": {"font": "georgia"},
+    "brand": {"logo_url": "https://your-broadcast.example/files/eyJ...-logo.png"},
+})
+kit.warnings   # e.g. a key the server did not recognize
+```
+
+Send only what changes, in the shape `get()` returns. An empty string or
+`None` puts a value back to its default, and `social_links` replaces the list.
+`font_stack` and `width` are read-only. The logo must be the `logo_url` of an
+image in the channel's file library; the server never fetches a URL. A value
+the Brand Kit page would refuse raises `ValidationError` (422), and nothing is
+saved.
+
+### Channel settings
+
+```python
+settings = client.channel_settings.get()
+settings["unsubscribe_page"]["legal_notice_url"]   # "https://example.com/impressum"
+
+updated = client.channel_settings.update({
+    "unsubscribe_page": {
+        "privacy_policy_url": "https://example.com/privacy",
+        "legal_notice_url": "https://example.com/impressum",
+    },
+})
+updated.warnings
+```
+
+Broadcast 2.46.0 or later. The settings are grouped like the Settings pages:
+`general`, `sender`, `unsubscribe_page` (with the legal links) and
+`confirmation_page`. Updates are partial: nested text and colours merge, an
+empty string or `None` removes a value, and `languages` replaces the list.
+Reading needs `channel_settings_read`, changing needs `channel_settings_write`;
+both are off on every token until you tick them.
 
 ### Email servers
 
@@ -446,6 +486,7 @@ integration requires.
 | Email Servers | `email_servers_read` -- list, get | `email_servers_write` -- create, update, delete, test_connection, copy_to_channel (admin) |
 | Webhook Endpoints | `webhook_endpoints_read` -- list, get, deliveries | `webhook_endpoints_write` -- create, update, delete, test |
 | Autopilot | `autopilot_read` -- list, get, runs | `autopilot_write` -- create, update, delete, activate, pause, deactivate, trigger_run |
+| Channel Settings | `channel_settings_read` -- channel_settings.get, channel_design.get | `channel_settings_write` -- channel_settings.update, channel_design.update |
 | Users (admin token only) | `users_read` -- list, get, channel_permissions, system_permissions | `users_write` -- create, update, deactivate, activate, delete, permission writes |
 
 ---

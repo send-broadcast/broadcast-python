@@ -6,6 +6,7 @@ from .connection import Connection
 from .resources.autopilots import Autopilots
 from .resources.broadcasts import Broadcasts
 from .resources.channel_design import ChannelDesign
+from .resources.channel_settings import ChannelSettings
 from .resources.discovery import Discovery
 from .resources.email_servers import EmailServers
 from .resources.global_suppressions import GlobalSuppressions
@@ -43,8 +44,10 @@ class Broadcast:
         self.segments = Segments(self)
         self.topics = Topics(self)
         self.templates = Templates(self)
-        #: The channel's brand kit (Settings -> Design). Read-only.
+        #: The channel's brand kit (Settings -> Brand Kit). Update needs Broadcast 2.46.0.
         self.channel_design = ChannelDesign(self)
+        #: The channel's settings (Broadcast 2.46.0 or later).
+        self.channel_settings = ChannelSettings(self)
         self.webhook_endpoints = WebhookEndpoints(self)
         self.transactionals = Transactionals(self)
         self.opt_in_forms = OptInForms(self)

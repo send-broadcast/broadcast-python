@@ -686,10 +686,44 @@ class TestChannelDesign(unittest.TestCase):
         self.assertEqual(result["layout"]["width"], 600)
         self.assertEqual(result["brand"]["social_links"], [{"network": "x", "url": "https://x.com/acme"}])
 
-    def test_is_read_only(self):
+    def test_has_no_create_delete_or_list(self):
         client, _, _ = make_client()
-        for method in ("create", "update", "delete", "list"):
+        for method in ("create", "delete", "list"):
             self.assertFalse(hasattr(client.channel_design, method), method)
+
+    # Broadcast 2.46.0: the brand kit is writable, partial, under channel_design.
+    def test_update_sends_a_partial_kit_and_exposes_warnings(self):
+        warning = {"code": "unrecognized_parameter", "param": "channel_design.layout.width", "message": "read-only"}
+        client, opener, _ = make_client({"body": {"colors": {"accent": "#ff5500"}, "warnings": [warning]}})
+
+        result = client.channel_design.update({"colors": {"accent": "#ff5500"}, "brand": {"logo_url": None}})
+        self.assertEqual(opener.last["method"], "PATCH")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/channel/design")
+        self.assertEqual(opener.last["body"], {"channel_design": {"colors": {"accent": "#ff5500"}, "brand": {"logo_url": None}}})
+        self.assertEqual(result["colors"]["accent"], "#ff5500")
+        self.assertEqual(result.warnings[0].param, "channel_design.layout.width")
+
+
+class TestChannelSettings(unittest.TestCase):
+    def test_get_reads_the_channel_settings(self):
+        client, opener, _ = make_client({"body": {"general": {"name": "Northwind", "language": "de"}}})
+
+        result = client.channel_settings.get()
+        self.assertEqual(opener.last["method"], "GET")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/channel/settings")
+        self.assertIsNone(opener.last["body"])
+        self.assertEqual(result["general"]["language"], "de")
+
+    def test_update_sends_partial_groups_and_exposes_warnings(self):
+        warning = {"code": "unrecognized_parameter", "param": "channel_settings.general.domain", "message": "ignored"}
+        client, opener, _ = make_client({"body": {"general": {"name": "Northwind"}, "warnings": [warning]}})
+        legal = {"legal_notice_url": "https://northwind.example/impressum"}
+
+        result = client.channel_settings.update({"unsubscribe_page": legal})
+        self.assertEqual(opener.last["method"], "PATCH")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/channel/settings")
+        self.assertEqual(opener.last["body"], {"channel_settings": {"unsubscribe_page": legal}})
+        self.assertEqual(result.warnings[0].param, "channel_settings.general.domain")
 
 
 class TestUsers(unittest.TestCase):
