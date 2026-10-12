@@ -7,8 +7,10 @@ class ChannelSettings(BaseResource):
     """The settings of the token's channel (Broadcast 2.46.0 or later).
 
     Grouped like the Settings pages: ``general``, ``sender``,
-    ``unsubscribe_page`` (with the privacy policy and legal notice links) and
-    ``confirmation_page``. Reading requires ``channel_settings_read`` and
+    ``unsubscribe_page`` (with the privacy policy and legal notice links),
+    ``confirmation_page`` and ``opt_in_forms`` (``match_brand_kit``: whether
+    new opt-in forms start from the brand kit). The brand kit switches are set
+    here, not with ``channel_design.update()``. Reading requires ``channel_settings_read`` and
     changing requires ``channel_settings_write``. There is no channel
     argument; the server reads the channel the token resolves to.
     """
