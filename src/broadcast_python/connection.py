@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urljoin, urlparse
 
+from . import multipart as multipart_body
 from .configuration import Configuration
 from .errors import (
     APIError,
@@ -66,10 +67,13 @@ class Connection:
         payload: Any = None,
         headers: Optional[Dict[str, Any]] = None,
         raw: bool = False,
+        multipart: bool = False,
     ) -> Any:
+        """``multipart=True`` sends the payload as multipart/form-data
+        (``FilePart`` values become file parts) instead of JSON."""
         url = self._build_url(path, method, payload)
         return self._retry_with_backoff(
-            lambda: self._execute(method, url, payload, headers or {}, raw, 0)
+            lambda: self._execute(method, url, payload, headers or {}, raw, 0, multipart)
         )
 
     # --- Request building ---------------------------------------------------
@@ -81,15 +85,25 @@ class Connection:
         return url
 
     def _execute(
-        self, method: str, url: str, payload: Any, extra_headers: Dict[str, Any], raw: bool, redirects: int
+        self,
+        method: str,
+        url: str,
+        payload: Any,
+        extra_headers: Dict[str, Any],
+        raw: bool,
+        redirects: int,
+        multipart: bool = False,
     ) -> Any:
         body = None
-        if method != "GET" and _present(payload):
+        content_type = "application/json"
+        if multipart:
+            body, content_type = multipart_body.build(payload or {})
+        elif method != "GET" and _present(payload):
             body = json.dumps(payload).encode("utf-8")
 
         request = urllib.request.Request(url, data=body, method=method)
         request.add_header("Authorization", "Bearer {}".format(self.config.api_token))
-        request.add_header("Content-Type", "application/json")
+        request.add_header("Content-Type", content_type)
         request.add_header("User-Agent", "broadcast-python/{}".format(VERSION))
         for key, value in (extra_headers or {}).items():
             if value is None:

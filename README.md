@@ -2,7 +2,7 @@
 
 Official Python client for [Broadcast](https://sendbroadcast.net), the self-hosted email marketing platform.
 
-Works with any Broadcast instance — self-hosted or SaaS. Covers **117/117 API operations**, verified against the API's generated OpenAPI document.
+Works with any Broadcast instance — self-hosted or SaaS. Covers **143/143 API operations**, verified against the API's generated OpenAPI document.
 
 📖 **[Python SDK documentation](https://sendbroadcast.net/docs/python-sdk)** · [API reference](https://sendbroadcast.net/docs/api-authentication) · [All docs](https://sendbroadcast.net/docs)
 
@@ -314,6 +314,39 @@ The `match_brand_kit` switches (`unsubscribe_page`, `confirmation_page`
 and `opt_in_forms`) decide where the brand kit is used. They are set
 here, not with the brand kit update.
 
+### File assets
+
+The channel's file library (Broadcast 2.48.0 or later): PNG, JPEG and GIF
+images under 10 MB, each with a public URL that never expires. Use the URL in
+emails, or as the brand kit logo.
+
+```python
+# Upload from a path (multipart). The content type follows the extension.
+file = client.file_assets.upload("logo.png")
+file["url"]   # "https://your-broadcast.example/files/eyJ...-logo.png"
+
+# From a file object or bytes, with a filename; link it to this channel only; safe to retry
+client.file_assets.upload(png_bytes, filename="banner.gif", channel_restricted=True,
+                          idempotency_key="banner-{}".format(campaign_id))
+
+# Already have base64? Send it as JSON.
+client.file_assets.upload_base64(filename="logo.png", content_type="image/png",
+                                 data=base64.b64encode(png_bytes).decode())
+
+# Use it as the brand kit logo
+client.channel_design.update({"brand": {"logo_url": file["url"]}})
+
+client.file_assets.list(filter="logo", limit=20)   # {"data": [...], "total": n}
+client.file_assets.get(file["id"])
+client.file_assets.delete(file["id"])
+```
+
+A file that is not a PNG, JPEG or GIF, a file of 10 MB or more, or invalid
+base64 raises `ValidationError` (422). So does deleting a file that is a
+channel's brand kit logo: set another logo first. The server never fetches a
+URL; upload the bytes. Reading needs `file_assets_read`; uploading and
+deleting need `file_assets_write`.
+
 ### Email servers
 
 **Credential redaction guard.** The API returns credentials bullet-masked
@@ -492,6 +525,7 @@ integration requires.
 | Webhook Endpoints | `webhook_endpoints_read` -- list, get, deliveries | `webhook_endpoints_write` -- create, update, delete, test |
 | Autopilot | `autopilot_read` -- list, get, runs | `autopilot_write` -- create, update, delete, activate, pause, deactivate, trigger_run |
 | Channel Settings | `channel_settings_read` -- channel_settings.get, channel_design.get | `channel_settings_write` -- channel_settings.update, channel_design.update |
+| File Assets | `file_assets_read` -- list, get | `file_assets_write` -- upload, upload_base64, delete |
 | Users (admin token only) | `users_read` -- list, get, channel_permissions, system_permissions | `users_write` -- create, update, deactivate, activate, delete, permission writes |
 
 ---

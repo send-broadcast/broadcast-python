@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- `client.file_assets` for the File Assets API (Broadcast 2.48.0): `list(filter=,
+  limit=, offset=)`, `get(id)`, `upload(path_or_file_or_bytes, filename=,
+  content_type=, channel_restricted=, idempotency_key=)` (multipart),
+  `upload_base64(filename=, data=, ...)` (JSON) and `delete(id)`. The returned
+  `url` is what `channel_design.update({"brand": {"logo_url": ...}})` takes.
+  Deleting a brand kit logo raises `ValidationError` (422). Needs the new
+  `file_assets` permissions.
+- multipart/form-data requests in the transport, built on the standard
+  library (still no runtime dependencies). The debug log never shows the body.
 - `client.channel_settings.get()` and `client.channel_settings.update(settings)`
   for `GET`/`PATCH /api/v1/channel/settings` (Broadcast 2.46.0): general,
   sender, unsubscribe page (with the privacy policy and legal notice links),

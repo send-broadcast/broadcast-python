@@ -9,6 +9,7 @@ from .resources.channel_design import ChannelDesign
 from .resources.channel_settings import ChannelSettings
 from .resources.discovery import Discovery
 from .resources.email_servers import EmailServers
+from .resources.file_assets import FileAssets
 from .resources.global_suppressions import GlobalSuppressions
 from .resources.migration import Migration
 from .resources.opt_in_forms import OptInForms
@@ -48,6 +49,9 @@ class Broadcast:
         self.channel_design = ChannelDesign(self)
         #: The channel's settings (Broadcast 2.46.0 or later).
         self.channel_settings = ChannelSettings(self)
+        #: The channel's file library: upload images and get their public URLs
+        #: (Broadcast 2.48.0 or later).
+        self.file_assets = FileAssets(self)
         self.webhook_endpoints = WebhookEndpoints(self)
         self.transactionals = Transactionals(self)
         self.opt_in_forms = OptInForms(self)
@@ -129,9 +133,10 @@ class Broadcast:
         body_or_params: Any = None,
         headers: Optional[Dict[str, Any]] = None,
         raw: bool = False,
+        multipart: bool = False,
     ) -> Any:
         payload = self._inject_channel_scope(body_or_params)
-        return self._connection.request(method, path, payload, headers=headers, raw=raw)
+        return self._connection.request(method, path, payload, headers=headers, raw=raw, multipart=multipart)
 
     @property
     def _active_channel_id(self) -> Optional[Id]:

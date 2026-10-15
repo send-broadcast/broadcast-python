@@ -46,14 +46,19 @@ class StubOpener:
         self.calls: List[RecordedCall] = []
 
     def open(self, request, timeout=None):
-        body = request.data.decode("utf-8") if request.data else None
+        headers = {k.lower(): v for k, v in request.headers.items()}
+        # Only JSON bodies are decoded. A multipart upload carries file bytes
+        # that are not UTF-8; tests read those from `data`.
+        is_json = headers.get("content-type", "").startswith("application/json")
+        body = request.data.decode("utf-8") if request.data and is_json else None
         self.calls.append(
             RecordedCall(
                 method=request.get_method(),
                 url=request.full_url,
-                headers={k.lower(): v for k, v in request.headers.items()},
+                headers=headers,
                 body=json.loads(body) if body else None,
                 raw_body=body,
+                data=request.data,
             )
         )
 

@@ -66,7 +66,7 @@ class TestPublicSurface(unittest.TestCase):
         for name in (
             "subscribers", "sequences", "broadcasts", "segments", "topics", "templates",
             "webhook_endpoints", "transactionals", "opt_in_forms", "email_servers",
-            "autopilots", "discovery", "migration",
+            "autopilots", "discovery", "migration", "file_assets",
         ):
             self.assertTrue(hasattr(client, name), "missing resource: {}".format(name))
 
