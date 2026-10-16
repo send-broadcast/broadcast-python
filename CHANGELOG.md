@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-16
+
 ### Added
 
 - `client.file_assets` for the File Assets API (Broadcast 2.48.0): `list(filter=,
