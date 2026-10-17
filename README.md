@@ -218,6 +218,8 @@ client.templates.create(label="Welcome", subject="Hi", body="...")
 client.opt_in_forms.analytics(id, start_date=date(2026, 1, 1))
 # How often the same visitor sees a popup: one of TRIGGER_FREQUENCIES, or ValidationError (422).
 client.opt_in_forms.update(id, trigger_settings={"frequency": "once_per_day"})
+# Every N days (Broadcast 2.49 and later): frequency_cookie_days is a whole number, 1 or more; blank means 30.
+client.opt_in_forms.update(id, trigger_settings={"frequency": "once_per_days", "frequency_cookie_days": 7})
 client.opt_in_forms.create_variant(id, name="B", weight=50)
 client.opt_in_forms.duplicate(id, label="Copy")
 ```

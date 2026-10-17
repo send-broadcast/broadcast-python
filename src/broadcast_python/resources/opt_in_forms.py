@@ -9,7 +9,18 @@ Id = Union[str, int]
 #: visitor sees a popup. ``always`` and ``every_visit`` mean the same. The server
 #: refuses any other word with 422 (:class:`ValidationError`); the client does
 #: not check, so an older server is never refused a word it would take.
-TRIGGER_FREQUENCIES = ("always", "every_visit", "once_per_session", "once_per_day", "once_per_week", "once")
+#: ``once_per_days`` (Broadcast 2.49 and later) shows the popup again after
+#: ``trigger_settings["frequency_cookie_days"]`` days: a whole number, 1 or
+#: more; blank means 30.
+TRIGGER_FREQUENCIES = (
+    "always",
+    "every_visit",
+    "once_per_session",
+    "once_per_day",
+    "once_per_week",
+    "once",
+    "once_per_days",
+)
 
 
 class OptInForms(BaseResource):

@@ -306,7 +306,7 @@ class TestOptInFormFrequency(unittest.TestCase):
 
         self.assertEqual(
             TRIGGER_FREQUENCIES,
-            ("always", "every_visit", "once_per_session", "once_per_day", "once_per_week", "once"),
+            ("always", "every_visit", "once_per_session", "once_per_day", "once_per_week", "once", "once_per_days"),
         )
 
     # The server decides which words it accepts; the client sends what it is
