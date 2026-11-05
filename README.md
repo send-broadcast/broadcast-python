@@ -441,30 +441,6 @@ client.prime()    # full capability manifest
 client.skill()    # plain-text agent skill manifest (a str)
 ```
 
-### Migration / export
-
-Read-only. **Admin tokens only**, and every call needs a `broadcast_channel_id`.
-
-```python
-client = Broadcast(..., broadcast_channel_id=42)
-
-client.migration.manifest()
-
-for sub in client.migration.each_record("subscribers"):
-    ...   # auto-pages; advances by the limit the server actually applied
-
-# Suppressed addresses live in two lists; export both:
-# suppressions = global suppression list, unsubscribed_emails = the channel's own
-for row in client.migration.each_record("unsubscribed_emails"):
-    ...   # {"id", "email", "broadcast_channel_id", "created_at", "updated_at"}
-
-data = client.migration.download_file_asset(id)   # bytes
-```
-
-On a demo instance this entire API returns **403 for every request**, valid
-token or not — deliberately, so a public demo cannot be used as a token oracle.
-It surfaces as `AuthorizationError`.
-
 ---
 
 ## Channel Scoping
@@ -546,9 +522,6 @@ integration requires.
 The token is valid but lacks the permission for that call. Check the table
 above, then re-issue the key with the resource enabled — permissions are fixed
 at creation.
-
-On a demo instance, the entire migration API returns 403 for every request,
-valid token or not.
 
 ### `ValidationError` (422) on a repeated send
 

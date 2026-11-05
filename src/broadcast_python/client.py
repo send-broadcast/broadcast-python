@@ -11,7 +11,6 @@ from .resources.discovery import Discovery
 from .resources.email_servers import EmailServers
 from .resources.file_assets import FileAssets
 from .resources.global_suppressions import GlobalSuppressions
-from .resources.migration import Migration
 from .resources.opt_in_forms import OptInForms
 from .resources.segments import Segments
 from .resources.sequences import Sequences
@@ -65,7 +64,6 @@ class Broadcast:
         #: API token.
         self.global_suppressions = GlobalSuppressions(self)
         #: Read-only export endpoints. Requires an admin (system) API token.
-        self.migration = Migration(self)
         #: Installation users and their permissions. Requires an admin
         #: (system) API token; sudo users are read-only through this API.
         self.users = Users(self)

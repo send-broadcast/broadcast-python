@@ -109,7 +109,7 @@ class TestResponses(unittest.TestCase):
         client, _, _ = make_client(
             {"status": 200, "text": b"\x89PNG\r\n", "headers": {"content-type": "image/png"}}
         )
-        result = client.migration.download_file_asset(1)
+        result = client.discovery.skill()
         self.assertIsInstance(result, bytes)
 
 

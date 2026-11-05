@@ -27,7 +27,6 @@ from .errors import (
     WarningError,
 )
 from .resources.email_servers import REDACTED_FIELDS
-from .resources.migration import COLLECTIONS
 from .resources.opt_in_forms import TRIGGER_FREQUENCIES
 from .resources.transactionals import MAX_IDEMPOTENCY_KEY_LENGTH
 from .response import RateLimit, Response, Warning_
@@ -37,7 +36,6 @@ from .webhook import EVENT_TYPES
 __version__ = VERSION
 
 __all__ = [
-    "COLLECTIONS",
     "ENV_HOST",
     "ENV_TOKEN",
     "EVENT_TYPES",

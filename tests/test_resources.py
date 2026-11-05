@@ -474,87 +474,10 @@ class TestAutopilots(unittest.TestCase):
         self.assertEqual(opener.last["body"], {"autopilot": {"openrouter_api_key": "sk-or-v1-realkey"}})
 
 
-class TestMigration(unittest.TestCase):
-    COLLECTIONS = (
-        "channels", "subscribers", "templates", "segments", "sequences", "email_servers",
-        "opt_in_forms", "broadcasts", "outbound_receipts", "webhook_endpoints", "tokens",
-        "suppressions", "unsubscribed_emails", "tags", "users", "link_redirects", "link_clicks",
-        "subscriber_histories", "file_assets",
-    )
-
-    def test_all_nineteen_collections(self):
-        client, opener, _ = make_client({"body": {"data": [], "pagination": {"has_more": False}}})
-        for collection in self.COLLECTIONS:
-            getattr(client.migration, collection)(limit=10)
-            self.assertEqual(
-                path_of(opener.last["url"]), "/api/migration/v1/{}".format(collection), collection
-            )
-
-    def test_manifest(self):
-        client, opener, _ = make_client()
-        client.migration.manifest(days_history=30)
-        self.assertEqual(path_of(opener.last["url"]), "/api/migration/v1/manifest")
-        self.assertEqual(query_of(opener.last["url"])["days_history"], ["30"])
-
-    def test_download_file_asset_returns_bytes(self):
-        client, _, _ = make_client(
-            {"status": 200, "text": b"\x89PNG", "headers": {"content-type": "image/png"}}
-        )
-        self.assertEqual(client.migration.download_file_asset(3), b"\x89PNG")
-
-    # The channel suppression list (UnsubscribedEmail), separate from
-    # suppressions. Without it an export silently dropped the list.
-    def test_each_record_pages_through_unsubscribed_emails(self):
-        client, opener, _ = make_client(
-            [
-                {"body": {"data": [{"email": "gone@example.com"}], "pagination": {"has_more": True, "limit": 1}}},
-                {"body": {"data": [{"email": "left@example.com"}], "pagination": {"has_more": False, "limit": 1}}},
-            ]
-        )
-        emails = [r["email"] for r in client.migration.each_record("unsubscribed_emails", limit=1)]
-
-        self.assertEqual(emails, ["gone@example.com", "left@example.com"])
-        self.assertEqual(path_of(opener.calls[0]["url"]), "/api/migration/v1/unsubscribed_emails")
-        self.assertEqual(query_of(opener.calls[1]["url"])["offset"], ["1"])
-
-    def test_each_record_pages_until_has_more_is_false(self):
-        client, opener, _ = make_client(
-            [
-                {"body": {"data": [{"id": 1}, {"id": 2}], "pagination": {"has_more": True, "limit": 2}}},
-                {"body": {"data": [{"id": 3}], "pagination": {"has_more": False, "limit": 2}}},
-            ]
-        )
-        seen = [r["id"] for r in client.migration.each_record("subscribers", limit=2)]
-
-        self.assertEqual(seen, [1, 2, 3])
-        self.assertEqual(query_of(opener.calls[0]["url"])["offset"], ["0"])
-        self.assertEqual(query_of(opener.calls[1]["url"])["offset"], ["2"])
-
-    def test_each_record_advances_by_the_server_reported_limit(self):
-        # The server clamps limit to 250; advancing by the requested 1000 would skip records.
-        client, opener, _ = make_client(
-            [
-                {"body": {"data": [{"id": i} for i in range(250)], "pagination": {"has_more": True, "limit": 250}}},
-                {"body": {"data": [{"id": 250}], "pagination": {"has_more": False, "limit": 250}}},
-            ]
-        )
-        seen = list(client.migration.each_record("subscribers", limit=1000))
-
-        self.assertEqual(len(seen), 251)
-        self.assertEqual(query_of(opener.calls[1]["url"])["offset"], ["250"])
-
-    def test_each_record_stops_on_a_zero_advance(self):
-        client, opener, _ = make_client({"body": {"data": [{"id": 1}], "pagination": {"has_more": True, "limit": 0}}})
-        seen = list(client.migration.each_record("subscribers"))
-
-        self.assertEqual(len(seen), 1)
-        self.assertEqual(len(opener.calls), 1)
-
-
 class TestChannelScoping(unittest.TestCase):
     def test_injected_into_query_params(self):
         client, opener, _ = make_client(broadcast_channel_id=42)
-        client.migration.subscribers()
+        client.broadcasts.list()
         self.assertEqual(query_of(opener.last["url"])["broadcast_channel_id"], ["42"])
 
     def test_injected_into_bodies(self):
@@ -564,16 +487,16 @@ class TestChannelScoping(unittest.TestCase):
 
     def test_explicit_wins(self):
         client, opener, _ = make_client(broadcast_channel_id=42)
-        client.migration.subscribers(broadcast_channel_id=7)
+        client.broadcasts.list(broadcast_channel_id=7)
         self.assertEqual(query_of(opener.last["url"])["broadcast_channel_id"], ["7"])
 
     def test_with_channel_scopes_only_its_block(self):
         client, opener, _ = make_client()
         with client.with_channel(99):
-            client.migration.subscribers()
+            client.broadcasts.list()
         self.assertEqual(query_of(opener.last["url"])["broadcast_channel_id"], ["99"])
 
-        client.migration.subscribers()
+        client.broadcasts.list()
         self.assertNotIn("broadcast_channel_id", query_of(opener.last["url"]))
 
     def test_with_channel_restores_on_exception(self):
@@ -584,7 +507,7 @@ class TestChannelScoping(unittest.TestCase):
         except RuntimeError:
             pass
 
-        client.migration.subscribers()
+        client.broadcasts.list()
         self.assertEqual(query_of(opener.last["url"])["broadcast_channel_id"], ["42"])
 
 
