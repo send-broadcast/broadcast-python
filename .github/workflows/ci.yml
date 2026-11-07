@@ -23,8 +23,12 @@ jobs:
   # advertised and untested. The `datetime.fromisoformat` shim in response.py
   # exists specifically because 3.9 and 3.10 cannot parse a trailing Z, and
   # nothing had ever executed it on those versions.
+  #
+  # ubuntu-latest moved to Ubuntu 26.04, which has no Python 3.9 build ("The
+  # version '3.9' with architecture 'x64' was not found for Ubuntu 26.04"), so
+  # 3.9 runs on 24.04 until the 3.9 floor is dropped.
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.python == '3.9' && 'ubuntu-24.04' || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
