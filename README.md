@@ -2,7 +2,7 @@
 
 Official Python client for [Broadcast](https://sendbroadcast.net), the self-hosted email marketing platform.
 
-Works with any Broadcast instance — self-hosted or SaaS. Covers **143/143 API operations**, verified against the API's generated OpenAPI document.
+Works with any self-hosted Broadcast instance. Covers **122/122 API operations** of Broadcast 3.0, verified against the API's generated OpenAPI document.
 
 📖 **[Python SDK documentation](https://sendbroadcast.net/docs/python-sdk)** · [API reference](https://sendbroadcast.net/docs/api-authentication) · [All docs](https://sendbroadcast.net/docs)
 
