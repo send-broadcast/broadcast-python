@@ -58,6 +58,14 @@ class TestDiscovery(unittest.TestCase):
         client.prime()
         self.assertEqual(path_of(opener.last["url"]), "/api/v1/prime")
 
+    def test_channels_lists_the_channels_the_token_can_reach(self):
+        client, opener, _ = make_client()
+        client.discovery.channels()
+        self.assertEqual(opener.last["method"], "GET")
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/channels")
+        client.channels()
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/channels")
+
 
 class TestSubscribers(unittest.TestCase):
     def test_list_and_find(self):

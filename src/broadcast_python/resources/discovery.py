@@ -21,6 +21,16 @@ class Discovery(BaseResource):
         means the channel has no usable email server or sender identity."""
         return self._get("/api/v1/status")
 
+    def channels(self) -> Any:
+        """The channels this token can reach (Broadcast 3.1 or later): every
+        channel for an admin token, its own channel for a channel token.
+
+        Returns ``token_type`` and ``channels`` (each ``id``, ``name``, ``slug``,
+        ``active``). An admin token then names one with ``broadcast_channel_id``
+        or ``with_channel``. A plugin developer token is refused.
+        """
+        return self._get("/api/v1/channels")
+
     def prime(self) -> Any:
         """Full capability manifest: platform version, token permissions, channel
         status, the endpoint list the token can reach, rate limit, and usage tips."""

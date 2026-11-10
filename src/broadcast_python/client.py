@@ -122,6 +122,9 @@ class Broadcast:
     def openapi(self) -> str:
         return self.discovery.openapi()
 
+    def channels(self) -> Any:
+        return self.discovery.channels()
+
     # --- Internal ---
 
     def request(

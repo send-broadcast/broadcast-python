@@ -2,7 +2,7 @@
 
 Official Python client for [Broadcast](https://sendbroadcast.net), the self-hosted email marketing platform.
 
-Works with any self-hosted Broadcast instance. Covers **122/122 API operations** of Broadcast 3.0, verified against the API's generated OpenAPI document.
+Works with any self-hosted Broadcast instance. Covers **123/123 API operations** of Broadcast 3.1, verified against the API's generated OpenAPI document.
 
 📖 **[Python SDK documentation](https://sendbroadcast.net/docs/python-sdk)** · [API reference](https://sendbroadcast.net/docs/api-authentication) · [All docs](https://sendbroadcast.net/docs)
 
@@ -454,6 +454,14 @@ The previous scope is restored on exit, including when the block raises. The
 override lives on the client instance, so concurrent use across threads will
 interleave — use one client per thread, or pass `broadcast_channel_id`
 explicitly.
+
+To find the channel ids, list the channels the token can reach (Broadcast 3.1 or later):
+
+```python
+for channel in client.channels()["channels"]:
+    with client.with_channel(channel["id"]):
+        client.subscribers.list()
+```
 
 ---
 
