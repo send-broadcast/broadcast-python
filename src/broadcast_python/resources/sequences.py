@@ -22,12 +22,22 @@ class Sequences(BaseResource):
         return self._delete("/api/v1/sequences/{}".format(id))
 
     # --- Subscriber enrollment ---
+    #
+    # Both nest the attributes under ``subscriber``, because the API reads them
+    # with ``params.require(:subscriber)``. Sent flat, the server answers 400.
 
     def add_subscriber(self, sequence_id: Id, **attrs: Any) -> Any:
-        return self._post("/api/v1/sequences/{}/add_subscriber".format(sequence_id), attrs)
+        """Enrolls a subscriber: ``add_subscriber(id, email=..., first_name=..., last_name=...)``.
+
+        The client wraps the fields in ``subscriber``. A call that already passes
+        ``subscriber={...}`` is sent as is.
+        """
+        body = attrs if isinstance(attrs.get("subscriber"), dict) else {"subscriber": attrs}
+        return self._post("/api/v1/sequences/{}/add_subscriber".format(sequence_id), body)
 
     def remove_subscriber(self, sequence_id: Id, email: str) -> Any:
-        return self._delete("/api/v1/sequences/{}/remove_subscriber".format(sequence_id), {"email": email})
+        body = {"subscriber": {"email": email}}
+        return self._delete("/api/v1/sequences/{}/remove_subscriber".format(sequence_id), body)
 
     def list_subscribers(self, sequence_id: Id, page: int = 1) -> Any:
         return self._get("/api/v1/sequences/{}/list_subscribers".format(sequence_id), {"page": page})

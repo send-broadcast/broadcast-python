@@ -194,11 +194,25 @@ class TestSequences(unittest.TestCase):
     def test_enrollment(self):
         client, opener, _ = make_client()
         client.sequences.add_subscriber(3, email="a@b.com")
+        self.assertEqual(opener.last["method"], "POST")
         self.assertEqual(path_of(opener.last["url"]), "/api/v1/sequences/3/add_subscriber")
+        self.assertEqual(opener.last["body"], {"subscriber": {"email": "a@b.com"}})
+
+        client.sequences.add_subscriber(3, email="a@b.com", first_name="Ada", last_name="Lovelace")
+        self.assertEqual(
+            opener.last["body"],
+            {"subscriber": {"email": "a@b.com", "first_name": "Ada", "last_name": "Lovelace"}},
+        )
+
+        # An already-wrapped body is not wrapped twice.
+        client.sequences.add_subscriber(3, subscriber={"email": "a@b.com", "first_name": "Ada"})
+        self.assertEqual(opener.last["body"], {"subscriber": {"email": "a@b.com", "first_name": "Ada"}})
 
         client.sequences.remove_subscriber(3, "a@b.com")
         self.assertEqual(opener.last["method"], "DELETE")
-        self.assertEqual(opener.last["body"], {"email": "a@b.com"})
+        self.assertEqual(path_of(opener.last["url"]), "/api/v1/sequences/3/remove_subscriber")
+        self.assertEqual(opener.last["body"], {"subscriber": {"email": "a@b.com"}})
+        self.assertEqual(query_of(opener.last["url"]), {})
 
         client.sequences.list_subscribers(3, page=2)
         self.assertEqual(query_of(opener.last["url"])["page"], ["2"])

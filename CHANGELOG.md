@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- `sequences.add_subscriber` and `sequences.remove_subscriber` sent an unwrapped body (`{"email": ...}`), and the
+  server answered 400. The client now sends `{"subscriber": {"email": ..., "first_name": ..., "last_name": ...}}`.
+  The call signatures do not change; a call that already passes `subscriber={...}` is sent as is.
+
 ## [0.9.0] - 2026-11-11
 
 ### Added
