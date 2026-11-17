@@ -31,6 +31,13 @@ class BaseResource:
     def _delete(self, path: str, body: Optional[Dict[str, Any]] = None) -> Any:
         return self._client.request("DELETE", path, body)
 
+    @staticmethod
+    def _wrap(key: str, attrs: Dict[str, Any]) -> Dict[str, Any]:
+        """Nest ``attrs`` under ``key``; a body already wrapped (``{key: {...}}``) is sent as is."""
+        if len(attrs) == 1 and isinstance(attrs.get(key), dict):
+            return attrs
+        return {key: attrs}
+
     def _warn(self, message: str) -> None:
         """Emit through the configured logger, else stderr."""
         logger = self._client.config.logger

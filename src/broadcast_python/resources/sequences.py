@@ -13,10 +13,18 @@ class Sequences(BaseResource):
         return self._get("/api/v1/sequences/{}".format(id), {"include_steps": True} if include_steps else {})
 
     def create(self, **attrs: Any) -> Any:
-        return self._post("/api/v1/sequences", attrs)
+        """Nests the attributes under ``sequence``: the server reads ``params.require(:sequence)``,
+        and Rails drops non-column keys (such as ``taggify_list``) from a flat body.
+        A call that already passes ``sequence={...}`` is sent as is.
+        """
+        return self._post("/api/v1/sequences", self._wrap("sequence", attrs))
 
     def update(self, id: Id, **attrs: Any) -> Any:  # noqa: A002
-        return self._patch("/api/v1/sequences/{}".format(id), attrs)
+        """Nests the attributes under ``sequence``: the server reads ``params.require(:sequence)``,
+        and Rails drops non-column keys (such as ``taggify_list``) from a flat body.
+        A call that already passes ``sequence={...}`` is sent as is.
+        """
+        return self._patch("/api/v1/sequences/{}".format(id), self._wrap("sequence", attrs))
 
     def delete(self, id: Id) -> Any:  # noqa: A002
         return self._delete("/api/v1/sequences/{}".format(id))
@@ -54,10 +62,20 @@ class Sequences(BaseResource):
         return self._get("/api/v1/sequences/{}/steps/{}".format(sequence_id, step_id))
 
     def create_step(self, sequence_id: Id, **attrs: Any) -> Any:
-        return self._post("/api/v1/sequences/{}/steps".format(sequence_id), attrs)
+        """Nests the attributes under ``sequence_step``: the server reads ``params.require(:sequence_step)``,
+        and Rails drops non-column keys (such as ``taggify_list``) from a flat body.
+        A call that already passes ``sequence_step={...}`` is sent as is.
+        """
+        body = self._wrap("sequence_step", attrs)
+        return self._post("/api/v1/sequences/{}/steps".format(sequence_id), body)
 
     def update_step(self, sequence_id: Id, step_id: Id, **attrs: Any) -> Any:
-        return self._patch("/api/v1/sequences/{}/steps/{}".format(sequence_id, step_id), attrs)
+        """Nests the attributes under ``sequence_step``: the server reads ``params.require(:sequence_step)``,
+        and Rails drops non-column keys (such as ``taggify_list``) from a flat body.
+        A call that already passes ``sequence_step={...}`` is sent as is.
+        """
+        body = self._wrap("sequence_step", attrs)
+        return self._patch("/api/v1/sequences/{}/steps/{}".format(sequence_id, step_id), body)
 
     def move_step(self, sequence_id: Id, step_id: Id, under_id: Id) -> Any:
         """Reorders a step to sit directly after ``under_id``."""

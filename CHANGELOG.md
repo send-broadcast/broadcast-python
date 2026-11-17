@@ -9,6 +9,11 @@ All notable changes to this project will be documented in this file.
 - `sequences.add_subscriber` and `sequences.remove_subscriber` sent an unwrapped body (`{"email": ...}`), and the
   server answered 400. The client now sends `{"subscriber": {"email": ..., "first_name": ..., "last_name": ...}}`.
   The call signatures do not change; a call that already passes `subscriber={...}` is sent as is.
+- `broadcasts.create` / `update`, `sequences.create` / `update` and `sequences.create_step` / `update_step` sent flat
+  bodies. The server reads `params.require(:broadcast)` (`:sequence`, `:sequence_step`) and Rails drops keys that are
+  not model columns, so `taggify_list` (broadcasts, steps) and `email_headers` (broadcasts) vanished without an error.
+  The client now nests the attributes under `broadcast` / `sequence` / `sequence_step`. A call that already passes
+  `broadcast={...}` (or `sequence=`, `sequence_step=`) is sent as is. The call signatures do not change.
 
 ## [0.9.0] - 2026-11-11
 

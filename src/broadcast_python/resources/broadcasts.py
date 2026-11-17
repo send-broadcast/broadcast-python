@@ -13,10 +13,18 @@ class Broadcasts(BaseResource):
         return self._get("/api/v1/broadcasts/{}".format(id))
 
     def create(self, **attrs: Any) -> Any:
-        return self._post("/api/v1/broadcasts", attrs)
+        """Nests the attributes under ``broadcast``: the server reads ``params.require(:broadcast)``,
+        and Rails drops non-column keys (such as ``taggify_list``) from a flat body.
+        A call that already passes ``broadcast={...}`` is sent as is.
+        """
+        return self._post("/api/v1/broadcasts", self._wrap("broadcast", attrs))
 
     def update(self, id: Id, **attrs: Any) -> Any:  # noqa: A002
-        return self._patch("/api/v1/broadcasts/{}".format(id), attrs)
+        """Nests the attributes under ``broadcast``: the server reads ``params.require(:broadcast)``,
+        and Rails drops non-column keys (such as ``taggify_list``) from a flat body.
+        A call that already passes ``broadcast={...}`` is sent as is.
+        """
+        return self._patch("/api/v1/broadcasts/{}".format(id), self._wrap("broadcast", attrs))
 
     def delete(self, id: Id) -> Any:  # noqa: A002
         return self._delete("/api/v1/broadcasts/{}".format(id))

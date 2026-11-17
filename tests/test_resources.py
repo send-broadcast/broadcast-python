@@ -140,11 +140,22 @@ class TestBroadcasts(unittest.TestCase):
         self.assertEqual(path_of(opener.last["url"]), "/api/v1/broadcasts/5")
 
         client.broadcasts.create(subject="Hello")
-        self.assertEqual(opener.last["body"], {"subject": "Hello"})
+        self.assertEqual(opener.last["body"], {"broadcast": {"subject": "Hello"}})
 
         client.broadcasts.update(5, subject="Edited")
         self.assertEqual(opener.last["method"], "PATCH")
-        self.assertEqual(opener.last["body"], {"subject": "Edited"})
+        self.assertEqual(opener.last["body"], {"broadcast": {"subject": "Edited"}})
+
+        # Non-column keys must land inside the wrapper, or Rails drops them.
+        client.broadcasts.create(subject="Hello", taggify_list="a,b", email_headers={"X-A": "1"})
+        self.assertEqual(
+            opener.last["body"],
+            {"broadcast": {"subject": "Hello", "taggify_list": "a,b", "email_headers": {"X-A": "1"}}},
+        )
+
+        # An already-wrapped body is sent unchanged.
+        client.broadcasts.update(5, broadcast={"subject": "Wrapped"})
+        self.assertEqual(opener.last["body"], {"broadcast": {"subject": "Wrapped"}})
 
         client.broadcasts.delete(5)
         self.assertEqual(opener.last["method"], "DELETE")
@@ -185,8 +196,15 @@ class TestSequences(unittest.TestCase):
         client.sequences.get(3, include_steps=True)
         self.assertEqual(query_of(opener.last["url"])["include_steps"], ["true"])
 
-        client.sequences.create(name="Onboarding")
-        self.assertEqual(opener.last["body"], {"name": "Onboarding"})
+        client.sequences.create(label="Onboarding")
+        self.assertEqual(opener.last["body"], {"sequence": {"label": "Onboarding"}})
+
+        client.sequences.update(3, label="Renamed")
+        self.assertEqual(opener.last["method"], "PATCH")
+        self.assertEqual(opener.last["body"], {"sequence": {"label": "Renamed"}})
+
+        client.sequences.create(sequence={"label": "Wrapped"})
+        self.assertEqual(opener.last["body"], {"sequence": {"label": "Wrapped"}})
 
         client.sequences.delete(3)
         self.assertEqual(opener.last["method"], "DELETE")
@@ -225,11 +243,16 @@ class TestSequences(unittest.TestCase):
         client.sequences.get_step(3, 9)
         self.assertEqual(path_of(opener.last["url"]), "/api/v1/sequences/3/steps/9")
 
-        client.sequences.create_step(3, subject="Day 1")
+        client.sequences.create_step(3, subject="Day 1", taggify_list="vip")
         self.assertEqual(opener.last["method"], "POST")
+        self.assertEqual(opener.last["body"], {"sequence_step": {"subject": "Day 1", "taggify_list": "vip"}})
+
+        client.sequences.create_step(3, sequence_step={"subject": "Wrapped"})
+        self.assertEqual(opener.last["body"], {"sequence_step": {"subject": "Wrapped"}})
 
         client.sequences.update_step(3, 9, subject="Day 2")
         self.assertEqual(opener.last["method"], "PATCH")
+        self.assertEqual(opener.last["body"], {"sequence_step": {"subject": "Day 2"}})
 
         client.sequences.move_step(3, 9, 4)
         self.assertEqual(path_of(opener.last["url"]), "/api/v1/sequences/3/steps/9/move")
@@ -505,7 +528,7 @@ class TestChannelScoping(unittest.TestCase):
     def test_injected_into_bodies(self):
         client, opener, _ = make_client(broadcast_channel_id=42)
         client.broadcasts.create(subject="Hi")
-        self.assertEqual(opener.last["body"], {"subject": "Hi", "broadcast_channel_id": 42})
+        self.assertEqual(opener.last["body"], {"broadcast": {"subject": "Hi"}, "broadcast_channel_id": 42})
 
     def test_explicit_wins(self):
         client, opener, _ = make_client(broadcast_channel_id=42)
