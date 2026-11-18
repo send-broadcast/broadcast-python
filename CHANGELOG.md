@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-17
+
 ### Fixed
 
 - `sequences.add_subscriber` and `sequences.remove_subscriber` sent an unwrapped body (`{"email": ...}`), and the
